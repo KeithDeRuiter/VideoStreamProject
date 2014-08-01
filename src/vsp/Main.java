@@ -19,11 +19,13 @@ import uk.co.caprica.vlcj.runtime.RuntimeUtil;
 import vsp.display.LiveDisplay;
 
 /**
- *
+ * Main launcher class for the VideoStreamProject.
+ * 
  * @author Keith
  */
 public class Main {
 
+    /** The properties for this application. */
     public static final Properties PROPERTIES = new Properties();
 
     static {
@@ -37,6 +39,7 @@ public class Main {
         }
     }
 
+    /** Main method. */
     public static void main(String[] args) {
         NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), PROPERTIES.getProperty("vlc.path"));
         Native.loadLibrary(RuntimeUtil.getLibVlcLibraryName(), LibVlc.class);
