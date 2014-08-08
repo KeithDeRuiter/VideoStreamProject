@@ -7,7 +7,7 @@ import java.util.UUID;
  * A class that represents a Video Source.
  * @author adam
  */
-public class VideoSource {
+public abstract class VideoSource {
 
     /** The ID of this VideoSource. */
     private UUID m_id;
@@ -75,4 +75,11 @@ public class VideoSource {
         }
         return true;
     }
+    
+    /**
+     * Gets the source of the media as an MRL String.
+     * 
+     * @return the MRL
+     */
+    public abstract String getMrl();
 }

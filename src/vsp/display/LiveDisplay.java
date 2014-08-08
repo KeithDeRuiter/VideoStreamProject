@@ -136,5 +136,4 @@ public class LiveDisplay {
         m_mediaPlayerComponent.getMediaPlayer().playMedia(filename);
     }
     
-    
 }
