@@ -91,4 +91,12 @@ public class StreamVideoSource extends VideoSource {
         }
         return true;
     }
+
+    /** {@inheritDoc} */
+    @Override
+    public String getMrl() {
+        String ip = m_host.getHostAddress();
+        String port = String.valueOf(m_port);
+        return "rtp://@" + ip + ":" + port;
+    }
 }
