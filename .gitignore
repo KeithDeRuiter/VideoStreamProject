@@ -1,5 +1,8 @@
 *.class
 
+# NetBeans project files #
+nbproject/*
+
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
