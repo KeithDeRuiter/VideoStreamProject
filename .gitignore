@@ -1,7 +1,10 @@
 *.class
 
-# NetBeans project files #
-nbproject/*
+# Build directory
+build/*
+
+# Private NetBeans Project Files
+nbproject/private/*
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
