@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package vsp.display;
 
 import java.awt.BorderLayout;
@@ -20,7 +15,8 @@ import javax.swing.event.ChangeListener;
 import uk.co.caprica.vlcj.component.EmbeddedMediaPlayerComponent;
 
 /**
- * The main display class of the VideoStreamProject.  Includes the media player, source entry, and controls.s
+ * The main display class of the LiveDisplay application for displaying streams.  Includes the media player, source 
+ * entry, and controls.
  * 
  * @author Keith
  */
@@ -47,17 +43,13 @@ public class LiveDisplay {
     /** The enter button for the MRL link. */
     JButton m_mrlConfirmButton;
     
-    /**
-     * Constructs a new instance of {@code LiveDisplay}.
-     */
+    /** Constructs a new instance of {@code LiveDisplay}. */
     public LiveDisplay() {
         m_frame = new JFrame("Live Display");
         initComponents();
     }
 
-    /**
-     * Initializes all of the components in this display.
-     */
+    /** Initializes all of the components in this display. */
     private void initComponents() {
         //Frame init
         m_frame.setLayout(new BorderLayout());
@@ -97,10 +89,8 @@ public class LiveDisplay {
         m_volumeSlider.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent ce) {
-                if (!m_volumeSlider.getValueIsAdjusting()) {
-                    int vol = (int)m_volumeSlider.getValue();
-                    m_mediaPlayerComponent.getMediaPlayer().setVolume(vol);
-                }            
+                int vol = m_volumeSlider.getValue();
+                m_mediaPlayerComponent.getMediaPlayer().setVolume(vol);
             }
         });
         
@@ -145,6 +135,5 @@ public class LiveDisplay {
     public void play(String filename) {
         m_mediaPlayerComponent.getMediaPlayer().playMedia(filename);
     }
-    
     
 }
