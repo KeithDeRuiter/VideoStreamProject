@@ -1,6 +1,7 @@
 package vsp.data;
 
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.Properties;
@@ -39,8 +40,10 @@ public class FrameRecording {
     /** The end time of this FrameRecording (in ms since Jan 1 1970). */
     private long m_endTime;
 
+    /** The width of the frame recording. */
     private int m_width;
 
+    /** The height of the frame recording. */
     private int m_height;
 
     /** Logger */
@@ -72,6 +75,21 @@ public class FrameRecording {
      * @param name the name of this frame recording.
      */
     public FrameRecording(UUID videoSource, int fps, String originalFile, String frameDir, long startTime, long endTime, int width, int height, String name) {
+        this(UUID.randomUUID(), videoSource, fps, originalFile, frameDir, startTime, endTime, width, height, name);
+    }
+
+    /**
+     * A Private constructor for internal use of this class only.
+     * @param id the ID of this FrameRecording.
+     * @param videoSource the VideoSource ID for this FrameRecording.
+     * @param fps the number of frames per second for this FrameRecording.
+     * @param frameDir the directory that contains the frame images.
+     * @param originalFile the fully qualified path to the original file from which this FrameRecording was ripped.
+     * @param startTime the start time of this Frame Recording (in ms since Jan 1, 1970.)
+     * @param endTime the end time of this Frame Recording (in ms since Jan 1, 1970.)
+     * @param name the name of this frame recording.
+     */
+    private FrameRecording(UUID id, UUID videoSource, int fps, String originalFile, String frameDir, long startTime, long endTime, int width, int height, String name) {
         m_videoSourceId = videoSource;
         m_name = name;
         m_fps = fps;
@@ -82,6 +100,7 @@ public class FrameRecording {
         m_id = UUID.randomUUID();
         m_width = width;
         m_height = height;
+        m_id = id;
     }
 
     /**
@@ -108,7 +127,32 @@ public class FrameRecording {
         int width = Integer.valueOf(recordingProperties.getProperty("image.width"));
         int height = Integer.valueOf(recordingProperties.getProperty("image.height"));
 
-        return new FrameRecording(sourceId, fps, originalFileName, frameDir, startTime, endTime, width, height, name);
+        return new FrameRecording(id, sourceId, fps, originalFileName, frameDir, startTime, endTime, width, height, name);
+    }
+
+    /**
+     * Saves this Frame Recording to file.
+     * @param outputFile the file to write out the properties to.
+     */
+    public void saveToFile(String outputFile) {
+        Properties props = new Properties();
+        props.put("recording.id", m_id.toString());
+        props.put("video.source.id", m_videoSourceId.toString());
+        props.put("name", m_name);
+        props.put("fps", m_fps);
+        props.put("frame.dir", m_frameDirectory);
+        props.put("original.file.name", m_originalFileName);
+        props.put("start.time", m_startTime);
+        props.put("end.time", m_endTime);
+        props.put("image.width", m_width);
+        props.put("image.height", m_height);
+
+        // Write out to disk.
+        try {
+            props.store(new FileWriter(outputFile), "Frame Recording Properties - " + new java.util.Date().toString());
+        } catch (IOException ex) {
+            LOGGER.log(Level.SEVERE, "Error writing Frame Recording properties.", ex);
+        }
     }
 
     /**
