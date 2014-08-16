@@ -1,6 +1,15 @@
 package vsp.processing;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import vsp.data.VideoSource;
 
 /**
@@ -16,11 +25,8 @@ public class StreamRecordingManager {
     /** The destination for frames recorded and ripped from the stream. */
     private final String m_frameDestinationDirectory;
     
-    /** The number of recordings running simultaneously in the multiple overlapping recording scheme. */
-    private final int m_numSimultaneousRecordings;
-    
-    /** The length of an individual snippet recording in the overlapping recording scheme. */
-    private final TimeUnit m_snippetRecordingDuration;
+    /** The period at which recording blocks are sent to processing. */
+    private final TimeUnit m_RecordingBlockFlushPeriod;
     
     /** The frames per second rate to record at. */
     private final int m_fps;
@@ -73,8 +79,7 @@ public class StreamRecordingManager {
             TimeUnit snippetRecordingDuration, int fps, int quality, VideoProcessor videoProcessor) {
         m_source = source;
         m_frameDestinationDirectory = frameDestinationDirectory;
-        m_numSimultaneousRecordings = numSimultaneousRecordings;
-        m_snippetRecordingDuration = snippetRecordingDuration;
+        m_RecordingBlockFlushPeriod = snippetRecordingDuration;
         m_fps = fps;
         m_quality = quality;
         m_videoProcessor = videoProcessor;
@@ -92,4 +97,85 @@ public class StreamRecordingManager {
         
     }
     
+    //========================================================
+    
+    private static int cursor = 0;
+    
+    
+    
+    /** Test main to print out fields from MPEG2 packets. */
+    public static void main(String args[]) {
+        
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                System.out.println("RUNNING");
+                
+                //Read In
+                File f = new File("pystreamy.ts");
+                FileInputStream fis = null;
+                try {
+                    fis = new FileInputStream(f);
+                } catch (FileNotFoundException ex) {
+                    ex.printStackTrace();
+                }
+
+                int length = (int) f.length();
+                byte[] bytes = new byte[length - cursor];
+
+                try {
+                    System.out.println("Reading file... cursor = " + cursor + " length = " + length + " L-C = " + (length - cursor));
+                    fis.skip(cursor);
+                    fis.read(bytes, 0, length - cursor);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+                
+                //Write Out
+                File of = new File("slices/slice_" + cursor + ".ts");
+
+                if(!of.exists()) {
+                    try {
+                        System.out.println("Creating new file...");
+                        of.createNewFile();
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+                FileOutputStream fos = null;
+                try {
+                    fos = new FileOutputStream(of);
+                } catch (FileNotFoundException ex) {
+                    ex.printStackTrace();
+                }
+
+
+                try {
+                    System.out.println("Writing file...");
+                    fos.write(bytes);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+                
+                try {
+                    System.out.println("Closing file...");
+                    fis.close();
+                    fos.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(StreamRecordingManager.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                
+                
+                System.out.println("Wrote cursor: " + cursor);
+                cursor = (int) length;
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                }
+            }   
+        };
+        
+        ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
+        ses.scheduleAtFixedRate(r, 0L, 10L, TimeUnit.SECONDS);
+    }
 }
