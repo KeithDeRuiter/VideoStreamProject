@@ -11,7 +11,7 @@ import vsp.util.VspProperties;
  *
  * @author adam
  */
-public class FfmpgVideoProcessor {
+public class FfmpegVideoProcessor {
 
     /**
      * Rips the frames from the supplied source video at the specified FPS (Frames Per Second) and the supplied image
@@ -31,6 +31,8 @@ public class FfmpgVideoProcessor {
         // Sample command String:
         //      ffmpeg -i toRip.ts -q 3 -r 30 -f image2 ./output/image-%%08d.jpg
 
+        VspProperties props = VspProperties.getInstance();
+
         // Create a FrameRecording and write it to disk.
         FrameRecording recording = new FrameRecording(sourceVideo.getId(),  // Source Video UUID
                 fps,                  // Frames Per Second
@@ -38,19 +40,19 @@ public class FfmpgVideoProcessor {
                 outputDir,            // Output Dir
                 startTime,            // Start Time
                 endTime);             // End Time
-        recording.saveToFile(outputDir + VspProperties.getInstance().getFrameRecordingFilename());
+        recording.saveToFile(outputDir + props.getFrameRecordingFilename());
 
         List<String> command = new ArrayList<>();
-        command.add(VspProperties.getInstance().getFfmpgPath());                      // FFMPG command
-        command.add("-i");                         // Input File Flag
-        command.add(sourceVideo.getFilepath());     // File Value
-        command.add("-q");                         // Quality Flag
-        command.add(String.valueOf(quality));       // Quality Value
-        command.add("-r");                         // 'Rate' (FPS) Flag
-        command.add(String.valueOf(fps));           // FPS value.
-        command.add("-f");                      // Output image Format
+        command.add(props.getFfmpegPath());      // FFMPEG command
+        command.add("-i");                       // Input File Flag
+        command.add(sourceVideo.getFilepath());  // File Value
+        command.add("-q");                       // Quality Flag
+        command.add(String.valueOf(quality));    // Quality Value
+        command.add("-r");                       // 'Rate' (FPS) Flag
+        command.add(String.valueOf(fps));        // FPS value.
+        command.add("-f");                       // Output image Format
         command.add("image2");                   // Output image Format
-        command.add(outputDir + "img-%08d.jpg");  // Output Directory and File Format - (DO WE NEED %% here?  or just %?)
+        command.add(outputDir + "img-%08d.jpg"); // Output Directory and File Format - (DO WE NEED %% here?  or just %?)
 
         ProcessBuilder pb = new ProcessBuilder(command);
         Process process = pb.start();
