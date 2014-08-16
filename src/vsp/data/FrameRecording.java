@@ -40,12 +40,6 @@ public class FrameRecording {
     /** The end time of this FrameRecording (in ms since Jan 1 1970). */
     private long m_endTime;
 
-    /** The width of the frame recording. */
-    private int m_width;
-
-    /** The height of the frame recording. */
-    private int m_height;
-
     /** Logger */
     private static final Logger LOGGER = Logger.getLogger(FrameRecordingPlayer.class.getName());
 
@@ -59,8 +53,8 @@ public class FrameRecording {
      * @param startTime the start time of this Frame Recording (in ms since Jan 1, 1970.)
      * @param endTime the end time of this Frame Recording (in ms since Jan 1, 1970.)
      */
-    public FrameRecording(UUID videoSource, int fps, String originalFile, String frameDir, long startTime, long endTime, int width, int height) {
-        this(videoSource, fps, originalFile, frameDir, startTime, endTime, width, height, "Unnamed Frame Recording");
+    public FrameRecording(UUID videoSource, int fps, String originalFile, String frameDir, long startTime, long endTime) {
+        this(videoSource, fps, originalFile, frameDir, startTime, endTime, "Unnamed Frame Recording");
     }
 
 
@@ -74,8 +68,8 @@ public class FrameRecording {
      * @param endTime the end time of this Frame Recording (in ms since Jan 1, 1970.)
      * @param name the name of this frame recording.
      */
-    public FrameRecording(UUID videoSource, int fps, String originalFile, String frameDir, long startTime, long endTime, int width, int height, String name) {
-        this(UUID.randomUUID(), videoSource, fps, originalFile, frameDir, startTime, endTime, width, height, name);
+    public FrameRecording(UUID videoSource, int fps, String originalFile, String frameDir, long startTime, long endTime, String name) {
+        this(UUID.randomUUID(), videoSource, fps, originalFile, frameDir, startTime, endTime, name);
     }
 
     /**
@@ -89,7 +83,7 @@ public class FrameRecording {
      * @param endTime the end time of this Frame Recording (in ms since Jan 1, 1970.)
      * @param name the name of this frame recording.
      */
-    private FrameRecording(UUID id, UUID videoSource, int fps, String originalFile, String frameDir, long startTime, long endTime, int width, int height, String name) {
+    private FrameRecording(UUID id, UUID videoSource, int fps, String originalFile, String frameDir, long startTime, long endTime, String name) {
         m_videoSourceId = videoSource;
         m_name = name;
         m_fps = fps;
@@ -98,8 +92,6 @@ public class FrameRecording {
         m_startTime = startTime;
         m_endTime = endTime;
         m_id = UUID.randomUUID();
-        m_width = width;
-        m_height = height;
         m_id = id;
     }
 
@@ -124,10 +116,8 @@ public class FrameRecording {
         String originalFileName = recordingProperties.getProperty("original.file.name");
         long startTime = Long.valueOf(recordingProperties.getProperty("start.time"));
         long endTime = Long.valueOf(recordingProperties.getProperty("end.time"));
-        int width = Integer.valueOf(recordingProperties.getProperty("image.width"));
-        int height = Integer.valueOf(recordingProperties.getProperty("image.height"));
 
-        return new FrameRecording(id, sourceId, fps, originalFileName, frameDir, startTime, endTime, width, height, name);
+        return new FrameRecording(id, sourceId, fps, originalFileName, frameDir, startTime, endTime, name);
     }
 
     /**
@@ -144,8 +134,6 @@ public class FrameRecording {
         props.put("original.file.name", m_originalFileName);
         props.put("start.time", m_startTime);
         props.put("end.time", m_endTime);
-        props.put("image.width", m_width);
-        props.put("image.height", m_height);
 
         // Write out to disk.
         try {
@@ -185,14 +173,6 @@ public class FrameRecording {
      */
     public int getFps() {
         return m_fps;
-    }
-
-    public int getWidth() {
-        return m_width;
-    }
-
-    public int getHeight() {
-        return m_height;
     }
 
     /**
