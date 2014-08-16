@@ -38,8 +38,8 @@ public class VspProperties {
     private String m_nixVlcPath;
 
     /** FFMPG Location. */
-    private static final String FFMPG_PATH_PROPERTY = "ffmpg.path";
-    private static final String FFMPG_PATH_DEFAULT = "./res/ffmpg.exe";
+    private static final String FFMPG_PATH_PROPERTY = "ffmpeg.path";
+    private static final String FFMPG_PATH_DEFAULT = "./res/ffmpeg.exe";
     private String m_ffmpgPath;
 
     /** Frame Recording storage directory. */
