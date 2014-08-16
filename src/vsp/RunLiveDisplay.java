@@ -14,17 +14,17 @@ import vsp.display.LiveDisplay;
 
 /**
  * Main launcher class for the LiveDisplay.
- * 
+ *
  * @author Keith
  */
 public class RunLiveDisplay {
 
     /** The properties for this application. */
     public static final Properties PROPERTIES = new Properties();
-    
+
     /** The Properties file location. */
     private static final String PROPERTIES_FILE = "./config/application.properties";
-    
+
     /** Logger for this file. */
     private static final Logger LOGGER = Logger.getLogger(RunLiveDisplay.class.getName());
 
@@ -43,13 +43,13 @@ public class RunLiveDisplay {
         }
     }
 
-    /** 
+    /**
      * Main method.  Creates and launches an instance of LiveDisplay.
      * @param args command line arguments.
      */
     public static void main(String[] args) {
         // VLCJ Native Settings
-        NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), PROPERTIES.getProperty("vlc.path"));
+        NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), PROPERTIES.getProperty("windows.vlc.path"));
         Native.loadLibrary(RuntimeUtil.getLibVlcLibraryName(), LibVlc.class);
 
         // Create and launch display

@@ -1,5 +1,6 @@
 package vsp.processing;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import vsp.data.FrameRecording;
@@ -26,18 +27,18 @@ public class FfmpgVideoProcessor implements VideoProcessor {
      * of the valid range (1-31).
      */
     @Override
-    public void ripFrames(VideoSource sourceVideo, int fps, int quality, String outputDir) {
-        // ffmpeg -i BNN-S01E06-720p.mkv -q 3 -r 30 -f image2 ./bnn-output/image-%%08d.jpg
+    public Process ripFrames(VideoSource sourceVideo, int fps, int quality, String outputDir, long startTime, long endTime) throws IOException {
+        // Sample command String:
+        //      ffmpeg -i toRip.ts -q 3 -r 30 -f image2 ./output/image-%%08d.jpg
 
         // Create a FrameRecording and write it to disk.
         FrameRecording recording = new FrameRecording(sourceVideo.getId(),  // Source Video UUID
-                                                      fps,                  // Frames Per Second
-                                                      sourceVideo.getMrl(), // Source Video
-                                                      outputDir,            // Output Dir
-                                                      0L,                   // Start Time
-                                                      0L,                   // End Time
-                                                      0,                    // Width
-                                                      0);                   // Height
+                fps,                  // Frames Per Second
+                sourceVideo.getMrl(), // Source Video
+                outputDir,            // Output Dir
+                startTime,            // Start Time
+                endTime);             // End Time
+        recording.saveToFile(outputDir + "/frame.recording");
 
         List<String> command = new ArrayList<>();
         command.add("ffmpg ");                // FFMPG command
@@ -52,8 +53,8 @@ public class FfmpgVideoProcessor implements VideoProcessor {
         command.add("img-%%08d.jpg");         // Output File Format - (DO WE NEED %% here?  or just %?)
 
         ProcessBuilder pb = new ProcessBuilder(command);
-
-
+        Process process = pb.start();
+        return process;
     }
 
     /** {@inheritDoc} */
