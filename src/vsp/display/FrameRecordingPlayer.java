@@ -6,6 +6,7 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -23,6 +24,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
 import vsp.data.FrameRecording;
+import vsp.util.VspProperties;
 
 /**
  * A special home-brew player for playing through ripped frame data.
@@ -105,11 +107,20 @@ public class FrameRecordingPlayer {
             @Override
             public void actionPerformed(ActionEvent ae) {
                 String mediaFile = m_mediaField.getText();
-                if (!mediaFile.isEmpty() || mediaFile.endsWith("frame-recording.properties")) {
+                if (!mediaFile.isEmpty() || mediaFile.endsWith(VspProperties.getInstance().getFrameRecordingFilename())) {
                     m_recording = FrameRecording.fromFile(m_mediaField.getText());
                     File frameDir = new File(m_recording.getFrameDirectory());
                     if (frameDir.exists() && frameDir.isDirectory()) {
-                        File[] frames = frameDir.listFiles();
+                        File[] frames = frameDir.listFiles(new FileFilter() {
+                            @Override
+                            public boolean accept(File file) {
+                                if(file.getName().endsWith("jpg") || file.getName().endsWith("jpeg")) {
+                                    return true;
+                                }
+                                return false;
+                            }
+                        });
+
                         final List<File> frameList = Arrays.asList(frames);
                         PlayProcessor pp = new PlayProcessor(frameList);
                         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();

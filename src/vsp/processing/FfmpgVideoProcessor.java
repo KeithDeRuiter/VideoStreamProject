@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import vsp.data.FileVideoSource;
 import vsp.data.FrameRecording;
+import vsp.util.VspProperties;
 
 /**
  *
@@ -37,19 +38,19 @@ public class FfmpgVideoProcessor {
                 outputDir,            // Output Dir
                 startTime,            // Start Time
                 endTime);             // End Time
-        recording.saveToFile(outputDir + "/frame.recording");
+        recording.saveToFile(outputDir + VspProperties.getInstance().getFrameRecordingFilename());
 
         List<String> command = new ArrayList<>();
-        command.add("ffmpg ");                      // FFMPG command
-        command.add("-i ");                         // Input File Flag
+        command.add(VspProperties.getInstance().getFfmpgPath());                      // FFMPG command
+        command.add("-i");                         // Input File Flag
         command.add(sourceVideo.getFilepath());     // File Value
-        command.add("-q ");                         // Quality Flag
+        command.add("-q");                         // Quality Flag
         command.add(String.valueOf(quality));       // Quality Value
-        command.add("-r ");                         // 'Rate' (FPS) Flag
+        command.add("-r");                         // 'Rate' (FPS) Flag
         command.add(String.valueOf(fps));           // FPS value.
-        command.add("-f image2");                   // Output image Format
-        command.add(outputDir);                     // Output Directory
-        command.add("img-%%08d.jpg");               // Output File Format - (DO WE NEED %% here?  or just %?)
+        command.add("-f");                      // Output image Format
+        command.add("image2");                   // Output image Format
+        command.add(outputDir + "img-%08d.jpg");  // Output Directory and File Format - (DO WE NEED %% here?  or just %?)
 
         ProcessBuilder pb = new ProcessBuilder(command);
         Process process = pb.start();

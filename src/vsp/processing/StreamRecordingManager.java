@@ -1,10 +1,14 @@
 package vsp.processing;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -95,7 +99,7 @@ public class StreamRecordingManager {
                 System.out.println("RUNNING");
                 
                 //Read In
-                File f = new File("pystreamy.ts");
+                File f = new File("pystream.ts");
                 FileInputStream fis = null;
                 try {
                     fis = new FileInputStream(f);
@@ -160,9 +164,38 @@ public class StreamRecordingManager {
                     public void run() {
                         FileVideoSource source = new FileVideoSource(filename);
                         try {
-                            ffmpvp.ripFrames(source, 30, 3, "frames", 0, 0);
+                            File dir = new File("frames/" + filename);
+                            dir.mkdirs();
+                            
+                            Process p = ffmpvp.ripFrames(source, 30, 3, dir.getAbsolutePath(), 0, 0);
+                            
+                            final InputStream procOutput = p.getInputStream();
+                            final InputStream procError = p.getErrorStream();
+                            
+                            final BufferedInputStream bufProcOutput = new BufferedInputStream(procOutput);
+                            final BufferedInputStream bufProcError = new BufferedInputStream(procError);
+                            
+                            final InputStreamReader procOutputReader = new InputStreamReader(bufProcOutput);
+                            final InputStreamReader procErrorReader = new InputStreamReader(bufProcError);
+                            
+                            final BufferedReader outputBufReader = new BufferedReader(procOutputReader);
+                            final BufferedReader errorBufReader = new BufferedReader(procErrorReader);
+                            
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        String line;
+                                        while((line = outputBufReader.readLine()) != null);
+                                        while((line = errorBufReader.readLine()) != null);
+                                    } catch (IOException ex) {
+                                        ex.printStackTrace();
+                                    }
+                                }
+                            }).start();
+                            
                         } catch (IOException ex) {
-                            Logger.getLogger(StreamRecordingManager.class.getName()).log(Level.SEVERE, null, ex);
+                            ex.printStackTrace();
                         }
                     }   
                 };
