@@ -129,11 +129,11 @@ public class FrameRecording {
         props.put("recording.id", m_id.toString());
         props.put("video.source.id", m_videoSourceId.toString());
         props.put("name", m_name);
-        props.put("fps", m_fps);
+        props.put("fps", String.valueOf(m_fps));
         props.put("frame.dir", m_frameDirectory);
         props.put("original.file.name", m_originalFileName);
-        props.put("start.time", m_startTime);
-        props.put("end.time", m_endTime);
+        props.put("start.time", String.valueOf(m_startTime));
+        props.put("end.time", String.valueOf(m_endTime));
 
         // Write out to disk.
         try {

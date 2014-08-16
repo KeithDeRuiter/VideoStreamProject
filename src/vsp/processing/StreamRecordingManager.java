@@ -10,6 +10,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import vsp.data.FileVideoSource;
 import vsp.data.VideoSource;
 
 /**
@@ -35,7 +36,7 @@ public class StreamRecordingManager {
     private final int m_quality;
 
     /** The processor used to record and rip the individual frames. */
-    private final VideoProcessor m_videoProcessor;
+    private final static FfmpgVideoProcessor ffmpvp = new FfmpgVideoProcessor();
     
     /**
      * Constructs a new instance of {@code StreamRecordingManager}.
@@ -60,31 +61,13 @@ public class StreamRecordingManager {
      * @param fps The frames per second rate to record at.
      * @param quality The quality level of the recording, specified by the implementation of {@code VideoProcessor} used.
      */
-    public StreamRecordingManager(VideoSource source, String frameDestinationDirectory, int numSimultaneousRecordings, TimeUnit snippetRecordingDuration, int fps, int quality) {
-        this(source, frameDestinationDirectory, numSimultaneousRecordings, snippetRecordingDuration, fps, quality, null);
-    }
-    
-    /**
-     * Constructs a new instance of {@code StreamRecordingManager}.
-     * 
-     * @param source The source of the video.
-     * @param frameDestinationDirectory The directory that the ripped frames will be written to, which is created if it does not exist.
-     * @param numSimultaneousRecordings The number of recordings running simultaneously for the overlapping recording.
-     * @param snippetRecordingDuration The length of an individual snippet of recording in the overlapping recordings.
-     * @param fps The frames per second rate to record at.
-     * @param quality The quality level of the recording, specified by the implementation of {@code VideoProcessor} used.
-     * @param videoProcessor The video processor to use when recording and ripping frames.
-     */
     public StreamRecordingManager(VideoSource source, String frameDestinationDirectory, int numSimultaneousRecordings,
-            TimeUnit snippetRecordingDuration, int fps, int quality, VideoProcessor videoProcessor) {
+            TimeUnit snippetRecordingDuration, int fps, int quality) {
         m_source = source;
         m_frameDestinationDirectory = frameDestinationDirectory;
         m_RecordingBlockFlushPeriod = snippetRecordingDuration;
         m_fps = fps;
         m_quality = quality;
-        m_videoProcessor = videoProcessor;
-        
-        //TODO setup FFMPEG PROCESSOR
     }
     
     /** Start recording. */
@@ -109,7 +92,6 @@ public class StreamRecordingManager {
         Runnable r = new Runnable() {
             @Override
             public void run() {
-                try {
                 System.out.println("RUNNING");
                 
                 //Read In
@@ -133,7 +115,8 @@ public class StreamRecordingManager {
                 }
                 
                 //Write Out
-                File of = new File("slices/slice_" + cursor + ".ts");
+                final String filename = "slices/slice_" + cursor + ".ts";
+                File of = new File(filename);
 
                 if(!of.exists()) {
                     try {
@@ -169,9 +152,21 @@ public class StreamRecordingManager {
                 
                 System.out.println("Wrote cursor: " + cursor);
                 cursor = (int) length;
-                } catch (Throwable e) {
-                    e.printStackTrace();
-                }
+                
+                
+                //Start FFMPEG
+                Runnable ffmpegRunnable = new Runnable() {
+                    @Override
+                    public void run() {
+                        FileVideoSource source = new FileVideoSource(filename);
+                        try {
+                            ffmpvp.ripFrames(source, 30, 3, "frames", 0, 0);
+                        } catch (IOException ex) {
+                            Logger.getLogger(StreamRecordingManager.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }   
+                };
+                new Thread(ffmpegRunnable).start();
             }   
         };
         

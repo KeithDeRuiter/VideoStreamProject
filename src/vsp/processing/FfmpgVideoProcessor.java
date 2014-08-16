@@ -3,14 +3,14 @@ package vsp.processing;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import vsp.data.FileVideoSource;
 import vsp.data.FrameRecording;
-import vsp.data.VideoSource;
 
 /**
  *
  * @author adam
  */
-public class FfmpgVideoProcessor implements VideoProcessor {
+public class FfmpgVideoProcessor {
 
     /**
      * Rips the frames from the supplied source video at the specified FPS (Frames Per Second) and the supplied image
@@ -26,8 +26,7 @@ public class FfmpgVideoProcessor implements VideoProcessor {
      * @throws IllegalArgumentException if the source video does not exist, FPS is negative, quality value is out
      * of the valid range (1-31).
      */
-    @Override
-    public Process ripFrames(VideoSource sourceVideo, int fps, int quality, String outputDir, long startTime, long endTime) throws IOException {
+    public Process ripFrames(FileVideoSource sourceVideo, int fps, int quality, String outputDir, long startTime, long endTime) throws IOException {
         // Sample command String:
         //      ffmpeg -i toRip.ts -q 3 -r 30 -f image2 ./output/image-%%08d.jpg
 
@@ -41,16 +40,16 @@ public class FfmpgVideoProcessor implements VideoProcessor {
         recording.saveToFile(outputDir + "/frame.recording");
 
         List<String> command = new ArrayList<>();
-        command.add("ffmpg ");                // FFMPG command
-        command.add("-i ");                   // Input File Flag
-        command.add(sourceVideo.getMrl());    // File Value
-        command.add("-q ");                   // Quality Flag
-        command.add(String.valueOf(quality)); // Quality Value
-        command.add("-r ");                   // 'Rate' (FPS) Flag
-        command.add(String.valueOf(fps));     // FPS value.
-        command.add("-f image2");             // Output image Format
-        command.add(outputDir);               // Output Directory
-        command.add("img-%%08d.jpg");         // Output File Format - (DO WE NEED %% here?  or just %?)
+        command.add("ffmpg ");                      // FFMPG command
+        command.add("-i ");                         // Input File Flag
+        command.add(sourceVideo.getFilepath());     // File Value
+        command.add("-q ");                         // Quality Flag
+        command.add(String.valueOf(quality));       // Quality Value
+        command.add("-r ");                         // 'Rate' (FPS) Flag
+        command.add(String.valueOf(fps));           // FPS value.
+        command.add("-f image2");                   // Output image Format
+        command.add(outputDir);                     // Output Directory
+        command.add("img-%%08d.jpg");               // Output File Format - (DO WE NEED %% here?  or just %?)
 
         ProcessBuilder pb = new ProcessBuilder(command);
         Process process = pb.start();
@@ -58,7 +57,6 @@ public class FfmpgVideoProcessor implements VideoProcessor {
     }
 
     /** {@inheritDoc} */
-    @Override
     public void buildVideoFromFrames() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
