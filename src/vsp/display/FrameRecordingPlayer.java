@@ -68,11 +68,13 @@ public class FrameRecordingPlayer {
         m_frame.setVisible(true);
     }
 
-
+    /**
+     * Calculates the frame rate in milliseconds per frame, unfortunately this currently performs flat integer math and
+     * could slowly, over time create playback frame drift.  This method should get smarter.
+     * @param fps the FPS (frames per second)
+     * @return the number of milliseconds between frames.
+     */
     private long calculateRateInMillis(int fps) {
-//        if (1000 % fps == 0) {
-//            return 1000 % fps;
-//        }
         // This should be smarter
         return 1000 / fps;
     }
@@ -83,10 +85,6 @@ public class FrameRecordingPlayer {
         m_frame.setLayout(new BorderLayout());
         m_frame.setPreferredSize(new Dimension(800, 600));
         m_frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-//        m_screen = new JLabel();
-//        m_screen.setOpaque(true);
-//        m_screen.setBackground(Color.BLACK);
         m_screen = new FrameViewer();
 
         m_frame.add(buildMediaSelectionPanel(), BorderLayout.PAGE_START);
@@ -167,16 +165,27 @@ public class FrameRecordingPlayer {
         return panel;
     }
 
+    /** A PlayProcessor that handles updating frames on the FramePlayer. */
     private class PlayProcessor implements Runnable {
 
-        private List<File> m_frames;
+        /** The List of Frames to Play.  */
+        private final List<File> m_frames;
 
+        /** The current frame cursor position. */
         private int m_cursor = 0;
 
+        /**
+         * Constructs a new instance of PlayProcessor.
+         * @param frames the frames to play.
+         */
         public PlayProcessor(List<File> frames) {
             m_frames = new ArrayList<>(frames);
         }
 
+        /**
+         * Updates the cursor position to the one specified.
+         * @param position the position of the cursor to set.
+         */
         public void setCursor(int position) {
             if (position < 0) {
                 m_cursor = 0;
@@ -187,19 +196,14 @@ public class FrameRecordingPlayer {
             }
         }
 
+        /** {@inheritDoc} */
         @Override
         public void run() {
-//            try {
-                if (m_cursor == m_frames.size() - 1) {
-                    m_cursor = 0;
-                }
-//                BufferedImage img = ImageIO.read(new File(m_frames.get(m_cursor).getAbsolutePath()));
-//                m_screen.setIcon(new ImageIcon(img));
-                m_screen.updateFrame(m_frames.get(m_cursor).getAbsolutePath());
-                m_cursor++;
-//            } catch (IOException ex) {
-//                LOGGER.log(Level.SEVERE, "Error loading frame.", ex);
-//            }
+            if (m_cursor == m_frames.size() - 1) {
+                m_cursor = 0;
+            }
+            m_screen.updateFrame(m_frames.get(m_cursor).getAbsolutePath());
+            m_cursor++;
         }
     }
 }
