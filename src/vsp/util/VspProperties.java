@@ -37,10 +37,10 @@ public class VspProperties {
     private static final String NIX_VLC_PATH_DEFAULT = "/usr/bin/vlc";
     private String m_nixVlcPath;
 
-    /** FFMPG Location. */
-    private static final String FFMPG_PATH_PROPERTY = "ffmpeg.path";
-    private static final String FFMPG_PATH_DEFAULT = "./res/ffmpeg.exe";
-    private String m_ffmpgPath;
+    /** FFMPEG Location. */
+    private static final String FFMPEG_PATH_PROPERTY = "ffmpeg.path";
+    private static final String FFMPEG_PATH_DEFAULT = "./res/ffmpeg.exe";
+    private String m_ffmpegPath;
 
     /** Frame Recording storage directory. */
     private static final String FRAME_RECORDING_DIR_PROPERTY = "frame.recording.dir";
@@ -94,12 +94,12 @@ public class VspProperties {
             m_nixVlcPath = nixVlcPath;
         }
 
-        // FFMPG Path
-        String ffmpgPath = properties.getProperty(FFMPG_PATH_PROPERTY);
-        if (ffmpgPath == null){
-            LOGGER.config("Error reading FFMPG path from file (value was null), using default:  " + FFMPG_PATH_DEFAULT);
+        // FFMPEG Path
+        String ffmpegPath = properties.getProperty(FFMPEG_PATH_PROPERTY);
+        if (ffmpegPath == null){
+            LOGGER.config("Error reading FFMPEG path from file (value was null), using default:  " + FFMPEG_PATH_DEFAULT);
         } else {
-            m_ffmpgPath = ffmpgPath;
+            m_ffmpegPath = ffmpegPath;
         }
 
         // Frame Recording Directory
@@ -131,8 +131,12 @@ public class VspProperties {
         return m_nixVlcPath;
     }
 
-    public String getFfmpgPath() {
-        return m_ffmpgPath;
+    /**
+     * Returns the FFMPEG executable's path.
+     * @return the FFMPEG executable's path.
+     */
+    public String getFfmpegPath() {
+        return m_ffmpegPath;
     }
 
     public String getFrameRecordingDir() {

@@ -137,7 +137,9 @@ public class FrameRecording {
 
         // Write out to disk.
         try {
-            props.store(new FileWriter(outputFile), "Frame Recording Properties - " + new java.util.Date().toString());
+            FileWriter writer = new FileWriter(outputFile);
+            props.store(writer, "Frame Recording Properties - " + new java.util.Date().toString());
+            writer.close();
         } catch (IOException ex) {
             LOGGER.log(Level.SEVERE, "Error writing Frame Recording properties.", ex);
         }

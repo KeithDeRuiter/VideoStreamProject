@@ -40,7 +40,7 @@ public class StreamRecordingManager {
     private final int m_quality;
 
     /** The processor used to record and rip the individual frames. */
-    private final static FfmpgVideoProcessor ffmpvp = new FfmpgVideoProcessor();
+    private final static FfmpegVideoProcessor ffmpvp = new FfmpegVideoProcessor();
     
     /**
      * Constructs a new instance of {@code StreamRecordingManager}.
