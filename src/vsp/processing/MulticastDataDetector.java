@@ -74,7 +74,7 @@ public class MulticastDataDetector implements Runnable, RecordingCompleteListene
             s.receive(recv);
             
             //Kick off processing
-            String frameRecordingDirectory = VspProperties.getInstance().getFrameRecordingDir();
+            String frameRecordingDirectory = VspProperties.getInstance().getRecordingLibraryDirectory();
             StreamRecordingManager srm = new StreamRecordingManager(new StreamVideoSource(m_ipAddress, m_port, "Source"), frameRecordingDirectory, TimeUnit.MICROSECONDS);
             srm.startRecording();
             

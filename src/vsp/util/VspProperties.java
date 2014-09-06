@@ -43,9 +43,9 @@ public class VspProperties {
     private String m_ffmpegPath;
 
     /** Frame Recording storage directory. */
-    private static final String FRAME_RECORDING_DIR_PROPERTY = "frame.recording.dir";
-    private static final String FRAME_RECORDING_DIR_DEFAULT = "./recordings/";
-    private String m_frameRecordingDir;
+    private static final String RECORDING_LIBRARY_DIR_PROPERTY = "recording.library.dir";
+    private static final String RECORDING_LIBRARY_DIR_DEFAULT = "./recordings/";
+    private String m_recordingLibraryDir;
 
     /** Frame Recording meta data file property. */
     private static final String FRAME_RECORDING_FILE_PROPERTY = "frame.recording.filename";
@@ -56,18 +56,18 @@ public class VspProperties {
     private static final String SCRATCH_DIR_PROPERTY = "scratch.dir";
     private static final String SCRATCH_DIR_DEFAULT = "./scratch/";
     private String m_scratchDir;
-    
+
     /** Recording FPS value. */
     private static final String RECORDING_FPS_PROPERTY = "default.recording.fps";
     private static final int RECORDING_FPS_DEFAULT = 30;
     private int m_recordingFps;
-    
+
     /** Recording quality value. */
     private static final String RECORDING_QUALITY_PROPERTY = "default.recording.quality";
     private static final int RECORDING_QUALITY_DEFAULT = 3;
     private int m_recordingQuality;
-    
-    
+
+
 
     /** Private constructor, enforces Singleton pattern. */
     private VspProperties(){
@@ -119,12 +119,12 @@ public class VspProperties {
         }
 
         // Frame Recording Directory
-        String frameRecordingDir = properties.getProperty(FRAME_RECORDING_DIR_PROPERTY);
-        if (frameRecordingDir == null){
-            LOGGER.config("Error reading frame recording directory property (value was null), using default:  " + FRAME_RECORDING_DIR_DEFAULT);
-            m_frameRecordingDir = FRAME_RECORDING_DIR_DEFAULT;
+        String recordingLibraryDir = properties.getProperty(RECORDING_LIBRARY_DIR_PROPERTY);
+        if (recordingLibraryDir == null){
+            LOGGER.config("Error reading frame recording directory property (value was null), using default:  " + RECORDING_LIBRARY_DIR_DEFAULT);
+            m_recordingLibraryDir = RECORDING_LIBRARY_DIR_DEFAULT;
         } else {
-            m_frameRecordingDir = frameRecordingDir;
+            m_recordingLibraryDir = recordingLibraryDir;
         }
 
         // Frame Recording Metadata file
@@ -163,7 +163,7 @@ public class VspProperties {
         return m_macVlcPath;
     }
 
-    public String getNixVlcPath() {
+    public String getLinuxVlcPath() {
         return m_nixVlcPath;
     }
 
@@ -175,8 +175,12 @@ public class VspProperties {
         return m_ffmpegPath;
     }
 
-    public String getFrameRecordingDir() {
-        return m_frameRecordingDir;
+    /**
+     * Returns the directory that has the library of recordings.
+     * @return the directory that has the library of recordings.
+     */
+    public String getRecordingLibraryDirectory() {
+        return m_recordingLibraryDir;
     }
 
     public String getFrameRecordingFilename() {
@@ -190,11 +194,11 @@ public class VspProperties {
     public int getRecordingFps() {
         return m_recordingFps;
     }
-    
+
     public int getRecordingQuality() {
         return m_recordingQuality;
     }
-    
+
     /**
      * Returns the Singleton instance of VspProperties.
      * @return the Singleton instance of VspProperties.
