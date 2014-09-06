@@ -59,7 +59,7 @@ public class FfmpegVideoProcessor {
         return process;
     }
 
-    /** {@inheritDoc} */
+    /** This method is not implemented and will throw an Unsupported Operation Exception. */
     public void buildVideoFromFrames() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
