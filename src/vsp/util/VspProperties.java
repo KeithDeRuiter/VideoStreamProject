@@ -136,6 +136,15 @@ public class VspProperties {
             m_frameRecordingFileName = frameRecordingFileName;
         }
 
+        // Scratch work directory
+        String scratchDirectory = properties.getProperty(SCRATCH_DIR_PROPERTY);
+        if (scratchDirectory == null){
+            LOGGER.config("Error reading scratch directory property (value was null), using default:  " + SCRATCH_DIR_DEFAULT);
+            m_scratchDir = SCRATCH_DIR_DEFAULT;
+        } else {
+            m_scratchDir = scratchDirectory;
+        }
+
         // Recording fps value
         String recordingFps = properties.getProperty(RECORDING_FPS_PROPERTY);
         if (recordingFps == null){

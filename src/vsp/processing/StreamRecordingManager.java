@@ -110,19 +110,24 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
      * Starts recording. 
      */
     public void startRecording() {
+        Logger.getLogger(StreamRecordingManager.class.getName()).info("Starting Recording");
+        
         String mediaUrl = m_source.getMrl();
+        Logger.getLogger(StreamRecordingManager.class.getName()).info("Recording MRL: " + mediaUrl);
         long startTime = System.currentTimeMillis();
         m_recordingFilename = m_source.getName() + "-" + startTime;
-        m_recordingDirectory = m_videoLibraryDirectory + "/" + m_recordingFilename;
-        String tsFilePath = m_recordingDirectory + "/" + m_recordingFilename + ".ts";
+        m_recordingDirectory = m_videoLibraryDirectory + "/" + m_recordingFilename + "/";
+        String tsFilePath = m_recordingDirectory + m_recordingFilename + ".ts";
         File recordingDirectoryFile = new File(m_recordingDirectory);
         recordingDirectoryFile.mkdirs();
         String[] options = {":sout=#standard{mux=ts,access=file,dst=" + tsFilePath + "}"};
-        m_mediaPlayer.playMedia(mediaUrl, options);
+        boolean everythingIsOk = true;
+        everythingIsOk = m_mediaPlayer.startMedia(mediaUrl, options);
         
         FrameRecording frameRecording = new FrameRecording(m_source.getId(), m_fps, tsFilePath,
                 m_recordingDirectory, startTime, -1, "NAME");
         frameRecording.saveToFile(m_recordingDirectory + "/" + VspProperties.getInstance().getFrameRecordingFilename());
+        
         launchPeriodicProcessor(tsFilePath);
     }
 
@@ -133,13 +138,15 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
     private void launchPeriodicProcessor(String tsFilePath) {
         Runnable r = new PeriodicProcessorRunnable(tsFilePath);
         ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
-        m_periodicFuture = ses.scheduleAtFixedRate(r, 1L, m_recordingBlockFlushPeriod, TimeUnit.SECONDS);
+        m_periodicFuture = ses.scheduleAtFixedRate(r, 5L, m_recordingBlockFlushPeriod, TimeUnit.SECONDS);
     }
 
     /**
      * Stops recording.
      */
     public void stopRecording() {
+        Logger.getLogger(StreamRecordingManager.class.getName()).info("Stopping Recording");
+
         m_mediaPlayer.stop();
         for(RecordingCompleteListener l : m_listeners) {
             l.recordingComplete(m_source);
@@ -186,7 +193,7 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
         
         @Override
         public void run() {
-            //System.out.println("RUNNING");
+            Logger.getLogger(StreamRecordingManager.class.getName()).info("Running periodic processor");
 
             //Read In the file to rip frames from
             File f = new File(m_sourceFilepath);
@@ -199,6 +206,7 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
 
             int length = (int) f.length();
             int numNewBytes = length - cursor;
+            Logger.getLogger(StreamRecordingManager.class.getName()).info("Number of new bytes found in source file: " + numNewBytes);
             if(numNewBytes == 0) {
                 stopRecording();
                 return;
@@ -219,7 +227,7 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
             cursor = (int) length;
             
             //Write scratch recording snippet for ffmpeg to pull from
-            final String snippetPath = VspProperties.getInstance().getScratchDirectory() + "/" + m_sourceFilepath;
+            final String snippetPath = VspProperties.getInstance().getScratchDirectory() + "/" + System.currentTimeMillis();
             File scratchRecordingSnippet = new File(snippetPath);
             FileOutputStream fos;
             try {
@@ -238,11 +246,14 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
                 public void run() {
                     FileVideoSource source = new FileVideoSource(snippetPath);
                     try {
+                        Logger.getLogger(StreamRecordingManager.class.getName()).info("Launching FFMPEG Process");
                         Process frameProcess = ffmpvp.ripFrames(source, 30, 3, m_recordingDirectory);
+                        Logger.getLogger(StreamRecordingManager.class.getName()).info("Waiting for FFMPEG Process...");
                         frameProcess.waitFor(); //Wait for the processing to complete
                         //remove scratch material
                         File snippetFile = new File(snippetPath);
                         snippetFile.delete();
+                        Logger.getLogger(StreamRecordingManager.class.getName()).info("Deleted Snippet File");
                     } catch (IOException ex) {
                         Logger.getLogger(StreamRecordingManager.class.getName()).log(Level.SEVERE, "IO Exception while processing frames", ex);
                     } catch (InterruptedException ex) {

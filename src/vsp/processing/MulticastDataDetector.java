@@ -90,7 +90,9 @@ public class MulticastDataDetector implements Runnable, RecordingCompleteListene
             
             try {
                 //Wait for stop
+                Logger.getLogger(MulticastDataDetector.class.getName()).info("Stream started, waiting...");
                 m_listeningSemaphore.acquire();
+                Logger.getLogger(MulticastDataDetector.class.getName()).info("Stream stopped, continuing to listen");
             } catch (InterruptedException ex) {
                 Logger.getLogger(MulticastDataDetector.class.getName()).log(Level.SEVERE, null, ex);
             }
