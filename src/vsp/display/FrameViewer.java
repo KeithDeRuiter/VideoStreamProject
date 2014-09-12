@@ -45,6 +45,12 @@ public class FrameViewer extends JComponent {
         repaint();
     }
 
+    /** Clears the screen of any current image. */
+    public void clear() {
+        m_image = null;
+        repaint();
+    }
+
     /** {@inheritDoc} */
     public void paint(Graphics g) {
         // Setup Graphics 2D

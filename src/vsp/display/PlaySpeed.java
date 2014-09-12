@@ -7,9 +7,7 @@ package vsp.display;
 public enum PlaySpeed {
     HALF_SPEED("0.5X"),
     ONE_X("1X"),
-    TWO_X("2X"),
-    FOUR_X("4X"),
-    EIGHT_X("8X");
+    TWO_X("2X");
 
     /** A user-consumable display string for the speed. */
     private final String m_displayString;
