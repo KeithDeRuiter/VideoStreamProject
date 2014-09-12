@@ -3,6 +3,7 @@ package vsp.processing;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
@@ -12,11 +13,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import uk.co.caprica.vlcj.component.EmbeddedMediaPlayerComponent;
-import uk.co.caprica.vlcj.player.MediaPlayer;
 import uk.co.caprica.vlcj.player.MediaPlayerFactory;
 import uk.co.caprica.vlcj.player.headless.HeadlessMediaPlayer;
 import vsp.data.FileVideoSource;
+import vsp.data.FrameRecording;
 import vsp.data.VideoSource;
 import vsp.util.VspProperties;
 
@@ -68,12 +68,12 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
      * Constructs a new instance of {@code StreamRecordingManager}.
      *
      * @param source The source of the video.
-     * @param recordingDirectory The directory that the stream will be recorded to, which is created if it does not exist.
+     * @param recordingLibraryDirectory The directory that the stream will be recorded to, which is created if it does not exist.
      * @param snippetRecordingDuration The length of an individual snippet of
      * recording in the overlapping recordings.
      */
-    public StreamRecordingManager(VideoSource source, String recordingDirectory, long snippetRecordingDuration) {
-        this(source, recordingDirectory, snippetRecordingDuration, VspProperties.getInstance().getRecordingFps(),
+    public StreamRecordingManager(VideoSource source, String recordingLibraryDirectory, long snippetRecordingDuration) {
+        this(source, recordingLibraryDirectory, snippetRecordingDuration, VspProperties.getInstance().getRecordingFps(),
                 VspProperties.getInstance().getRecordingQuality());
     }
 
@@ -81,17 +81,17 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
      * Constructs a new instance of {@code StreamRecordingManager}.
      *
      * @param source The source of the video.
-     * @param recordingDirectory The directory that the stream will be recorded to, which is created if it does not exist.
+     * @param recordingLibraryDirectory The directory that the stream will be recorded to, which is created if it does not exist.
      * @param snippetRecordingDuration The length of an individual snippet of
      * recording in the overlapping recordings.
      * @param fps The frames per second rate to record at.
      * @param quality The quality level of the recording, specified by the
      * implementation of {@code VideoProcessor} used.
      */
-    public StreamRecordingManager(VideoSource source, String recordingDirectory,
+    public StreamRecordingManager(VideoSource source, String recordingLibraryDirectory,
             long snippetRecordingDuration, int fps, int quality) {
         m_source = source;
-        m_videoLibraryDirectory = recordingDirectory;
+        m_videoLibraryDirectory = recordingLibraryDirectory;
         m_recordingBlockFlushPeriod = snippetRecordingDuration;
         m_fps = fps;
         m_quality = quality;
@@ -111,7 +111,8 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
      */
     public void startRecording() {
         String mediaUrl = m_source.getMrl();
-        m_recordingFilename = m_source.getName() + "-" + System.currentTimeMillis();
+        long startTime = System.currentTimeMillis();
+        m_recordingFilename = m_source.getName() + "-" + startTime;
         m_recordingDirectory = m_videoLibraryDirectory + "/" + m_recordingFilename;
         String tsFilePath = m_recordingDirectory + "/" + m_recordingFilename + ".ts";
         File recordingDirectoryFile = new File(m_recordingDirectory);
@@ -119,6 +120,9 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
         String[] options = {":sout=#standard{mux=ts,access=file,dst=" + tsFilePath + "}"};
         m_mediaPlayer.playMedia(mediaUrl, options);
         
+        FrameRecording frameRecording = new FrameRecording(m_source.getId(), m_fps, tsFilePath,
+                m_recordingDirectory, startTime, -1, "NAME");
+        frameRecording.saveToFile(m_recordingDirectory + "/" + VspProperties.getInstance().getFrameRecordingFilename());
         launchPeriodicProcessor(tsFilePath);
     }
 
@@ -190,31 +194,55 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
             try {
                 fis = new FileInputStream(f);
             } catch (FileNotFoundException ex) {
-                ex.printStackTrace();
+                Logger.getLogger(StreamRecordingManager.class.getName()).log(Level.SEVERE, "Source file not found", ex);
             }
 
             int length = (int) f.length();
-            byte[] bytes = new byte[length - cursor];
+            int numNewBytes = length - cursor;
+            if(numNewBytes == 0) {
+                stopRecording();
+                return;
+            }
+            
+            byte[] bytes = new byte[numNewBytes];
 
+            //Skip bytes behind the cursor and read the new ones
             try {
                 //System.out.println("Reading file... cursor = " + cursor + " length = " + length + " L-C = " + (length - cursor));
                 fis.skip(cursor);
-                fis.read(bytes, 0, length - cursor);
+                fis.read(bytes, 0, numNewBytes);
             } catch (IOException ex) {
-                ex.printStackTrace();
+                Logger.getLogger(StreamRecordingManager.class.getName()).log(Level.SEVERE, "IOException skipping through and reading source file", ex);
             }
-
+            
+            //Reset cursor to end of file
             cursor = (int) length;
+            
+            //Write scratch recording snippet for ffmpeg to pull from
+            final String snippetPath = VspProperties.getInstance().getScratchDirectory() + "/" + m_sourceFilepath;
+            File scratchRecordingSnippet = new File(snippetPath);
+            FileOutputStream fos;
+            try {
+                fos = new FileOutputStream(scratchRecordingSnippet);
+                fos.write(bytes);
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(StreamRecordingManager.class.getName()).log(Level.SEVERE, "Failed to find file for writing scratch snippet file", ex);
+            } catch (IOException ex) {
+                Logger.getLogger(StreamRecordingManager.class.getName()).log(Level.SEVERE, "IOException writing scratch snippet file", ex);
+            }
+            
 
             //Start FFMPEG to rip frames
             Runnable ffmpegRunnable = new Runnable() {
                 @Override
                 public void run() {
-                    FileVideoSource source = new FileVideoSource(m_sourceFilepath);
+                    FileVideoSource source = new FileVideoSource(snippetPath);
                     try {
-                        File recordingDir = new File(m_recordingDirectory);
-                        Process frameProcess = ffmpvp.ripFrames(source, 30, 3, recordingDir.getAbsolutePath(), 0, 0);
+                        Process frameProcess = ffmpvp.ripFrames(source, 30, 3, m_recordingDirectory);
                         frameProcess.waitFor(); //Wait for the processing to complete
+                        //remove scratch material
+                        File snippetFile = new File(snippetPath);
+                        snippetFile.delete();
                     } catch (IOException ex) {
                         Logger.getLogger(StreamRecordingManager.class.getName()).log(Level.SEVERE, "IO Exception while processing frames", ex);
                     } catch (InterruptedException ex) {

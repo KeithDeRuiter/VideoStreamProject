@@ -10,9 +10,9 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import vsp.data.StreamVideoSource;
@@ -23,13 +23,17 @@ import vsp.util.VspProperties;
  *
  * @author Keith DeRuiter
  */
-public class MulticastDataDetector implements Runnable, RecordingCompleteListener {
+public class MulticastDataDetector implements Runnable, RecordingCompleteListener, MulticastDataDetectionNotifier {
 
     /** The IP Address to listen on. */
     private String m_ipAddress;
     
     /** The port to listen to. */
     private int m_port;
+    
+    /** List of listeners for data on the stream. */
+    private List<MulticastDataDetectionListener> m_multicastDataDetectionListeners;
+    
     
     /** 
      * The semaphore used to control the flow of checking for available data.
@@ -40,6 +44,8 @@ public class MulticastDataDetector implements Runnable, RecordingCompleteListene
      */
     private final Semaphore m_listeningSemaphore;
 
+    /** List of MulticastDataListeners to notify when data starts or stops. */
+    
     
     /**
      * Creates a new instance of MulticastDataDetector.
@@ -50,6 +56,7 @@ public class MulticastDataDetector implements Runnable, RecordingCompleteListene
         m_listeningSemaphore = new Semaphore(0);
         m_ipAddress = ipAddress;
         m_port = port;
+        m_multicastDataDetectionListeners = new ArrayList<>();
     }
     
     
@@ -70,18 +77,15 @@ public class MulticastDataDetector implements Runnable, RecordingCompleteListene
         
         boolean listening = true;
         while(listening) {
-            //Receive data, so we notice that data is coming over    
+            //Receive data, so we notice that data is coming over.  We don't actually receive the data here!
+            //VLC actually grabs the data for us, this is just a "is data there" detection mechanism.
             s.receive(recv);
+            notifyStreamStart();
             
             //Kick off processing
-<<<<<<< HEAD
-            String frameRecordingDirectory = VspProperties.getInstance().getFrameRecordingDir();
-            StreamRecordingManager srm = new StreamRecordingManager(new StreamVideoSource(m_ipAddress, m_port, "Source"),
-                    frameRecordingDirectory, 10L);
-=======
             String frameRecordingDirectory = VspProperties.getInstance().getRecordingLibraryDirectory();
-            StreamRecordingManager srm = new StreamRecordingManager(new StreamVideoSource(m_ipAddress, m_port, "Source"), frameRecordingDirectory, TimeUnit.MICROSECONDS);
->>>>>>> 212e9a348fe80de2ef4d18c63fd3bc1db8a15a91
+            StreamRecordingManager srm = new StreamRecordingManager(new StreamVideoSource(m_ipAddress, m_port, "Source"), frameRecordingDirectory, 10L);
+
             srm.startRecording();
             
             try {
@@ -90,12 +94,15 @@ public class MulticastDataDetector implements Runnable, RecordingCompleteListene
             } catch (InterruptedException ex) {
                 Logger.getLogger(MulticastDataDetector.class.getName()).log(Level.SEVERE, null, ex);
             }
+            
+            //Here, we have been told to continue listening, meaning the previous stream has ended
+            notifyStreamStop();
         }
         
         s.leaveGroup(group);
     }
-    
-    /** Tells the detector to go back to listening for new data streams. */
+        
+    /** Tells the detector the current stream ended, so go back to listening for new data streams. */
     synchronized public void continueListening() {
         m_listeningSemaphore.release();
     }
@@ -116,4 +123,27 @@ public class MulticastDataDetector implements Runnable, RecordingCompleteListene
         }
     }
 
+    /** Notifies all multicast data detection listeners that the stream has started. */
+    private void notifyStreamStart() {
+        for(MulticastDataDetectionListener l : m_multicastDataDetectionListeners) {
+            l.streamStarted();
+        }
+    }
+
+    /** Notifies all multicast data detection listeners that the stream has stopped. */
+    private void notifyStreamStop() {
+        for(MulticastDataDetectionListener l : m_multicastDataDetectionListeners) {
+            l.streamEnded();
+        }
+    }
+
+    @Override
+    public void addMulticastDataDetectionListener(MulticastDataDetectionListener listener) {
+        m_multicastDataDetectionListeners.add(listener);
+    }
+
+    @Override
+    public void removeMulticastDataDetectionListener(MulticastDataDetectionListener listener) {
+        m_multicastDataDetectionListeners.remove(listener);
+    }
 }

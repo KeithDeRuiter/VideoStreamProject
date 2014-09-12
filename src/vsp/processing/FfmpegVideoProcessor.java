@@ -28,20 +28,12 @@ public class FfmpegVideoProcessor {
      * 
      * @throws IllegalArgumentException if the source video does not exist, FPS is negative, quality value is out
      * of the valid range (1-31).
+     * @throws IOException if the process cannot be started.
      */
-    public Process ripFrames(FileVideoSource sourceVideo, int fps, int quality, String outputDir, long startTime, long endTime) throws IOException {
+    public Process ripFrames(FileVideoSource sourceVideo, int fps, int quality, String outputDir) throws IOException {
         // Sample command String:
         //      ffmpeg -i toRip.ts -q 3 -r 30 -f image2 ./output/image-%%08d.jpg
         VspProperties props = VspProperties.getInstance();
-
-        // Create a FrameRecording and write it to disk.
-        FrameRecording recording = new FrameRecording(sourceVideo.getId(),  // Source Video UUID
-                fps,                  // Frames Per Second
-                sourceVideo.getMrl(), // Source Video
-                outputDir,            // Output Dir
-                startTime,            // Start Time
-                endTime);             // End Time
-        recording.saveToFile(outputDir + props.getFrameRecordingFilename());
 
         List<String> command = new ArrayList<>();
         command.add(props.getFfmpegPath());      // FFMPEG command

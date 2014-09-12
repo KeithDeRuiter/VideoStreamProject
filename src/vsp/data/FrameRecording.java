@@ -146,6 +146,18 @@ public class FrameRecording {
     }
 
     /**
+     * Update the end time of a file.
+     * 
+     * @param outputFile the file to write out the properties to.
+     * @param endTime The time that this recording ended.
+     */
+    public static void updateRecordingEndTime(String outputFile, long endTime) {
+        FrameRecording recording = FrameRecording.fromFile(outputFile);
+        recording.setEndTime(endTime);
+        recording.saveToFile(outputFile);
+    }
+    
+    /**
      * Returns a unique ID for this recording.
      * @return a unique ID for this recording.
      */
@@ -207,6 +219,13 @@ public class FrameRecording {
      */
     public long getEndTime() {
         return m_endTime;
+    }
+
+    /**
+     * Sets the end time of this recording.
+     */
+    private void setEndTime(long endTime) {
+        m_endTime = endTime;
     }
 
     /** {@inheritDoc} */
