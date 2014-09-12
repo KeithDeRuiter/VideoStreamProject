@@ -1,11 +1,6 @@
 package vsp;
 
-import com.sun.jna.Native;
-import com.sun.jna.NativeLibrary;
-import uk.co.caprica.vlcj.binding.LibVlc;
-import uk.co.caprica.vlcj.runtime.RuntimeUtil;
 import vsp.display.LiveDisplay;
-import vsp.util.VspProperties;
 import vsp.util.VspUtilities;
 
 /**

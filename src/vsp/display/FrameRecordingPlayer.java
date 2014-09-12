@@ -9,9 +9,11 @@ import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -39,8 +41,13 @@ public class FrameRecordingPlayer {
     /** The 'screen' on which the images are rendered.  */
     private FrameViewer m_screen;
 
+    private PlayerState m_playState;
+
     /** The button to play the selected media. */
-    private JButton m_playButton;
+    private JButton m_playPauseButton;
+
+    /** A button to stop playback. */
+    private JButton m_stopButton;
 
     /** The frame advance button. */
     private JButton m_frameForwardButton;
@@ -49,23 +56,22 @@ public class FrameRecordingPlayer {
     private JButton m_frameBackwardButton;
 
     /** The speed selector. */
-    private JComboBox<PlaySpeed> m_playSpeedSelector;
+    private final JComboBox<PlaySpeed> m_playSpeedSelector;
 
     /** The text field for specifying the media. */
     private JTextField m_mediaField;
 
-    /**  */
+    /** The recording to play. */
     private FrameRecording m_recording;
+
+    private static final Object LOCK = new Object();
+
+    private ScheduledFuture m_future;
 
     /** Creates a new Frame Recording Player. */
     public FrameRecordingPlayer() {
+        m_playSpeedSelector = new JComboBox<>();
         initComponents();
-    }
-
-    /** Launches the display. */
-    public void launch() {
-        m_frame.pack();
-        m_frame.setVisible(true);
     }
 
     /**
@@ -74,9 +80,15 @@ public class FrameRecordingPlayer {
      * @param fps the FPS (frames per second)
      * @return the number of milliseconds between frames.
      */
-    private long calculateRateInMillis(int fps) {
+    private long calculateFpsInMillis(int fps) {
         // This should be smarter
-        return 1000 / fps;
+        return 1000L / fps;
+    }
+
+    /** Launches the display. */
+    public void launch() {
+        m_frame.pack();
+        m_frame.setVisible(true);
     }
 
     /** Initializes the display components of this display. */
@@ -98,43 +110,78 @@ public class FrameRecordingPlayer {
      */
     private JPanel createButtonPanel() {
         JPanel panel = new JPanel();
-
-        m_playButton = new JButton("PLAY");
-        m_playButton.setToolTipText("Play/Pause button.");
-        m_playButton.addActionListener(new ActionListener() {
+        m_playPauseButton = new JButton("Play");
+        m_playPauseButton.setToolTipText("Play/Pause button.");
+        m_playPauseButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent ae) {
-                String mediaFile = m_mediaField.getText();
-                if (!mediaFile.isEmpty() || mediaFile.endsWith(VspProperties.getInstance().getFrameRecordingFilename())) {
-                    m_recording = FrameRecording.fromFile(m_mediaField.getText());
-                    File frameDir = new File(m_recording.getFrameDirectory());
-                    if (frameDir.exists() && frameDir.isDirectory()) {
-                        File[] frames = frameDir.listFiles(new FileFilter() {
-                            @Override
-                            public boolean accept(File file) {
-                                if(file.getName().endsWith("jpg") || file.getName().endsWith("jpeg")) {
-                                    return true;
-                                }
-                                return false;
-                            }
-                        });
-
-                        final List<File> frameList = Arrays.asList(frames);
-                        PlayProcessor pp = new PlayProcessor(frameList);
-                        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-                        long rate = calculateRateInMillis(m_recording.getFps());
-                        executor.scheduleAtFixedRate(pp, 0L, rate, TimeUnit.MILLISECONDS);
-                    } else {
-                        JOptionPane.showMessageDialog(m_frame, "Media directory not found or is not a directory.  :(", "Error", JOptionPane.WARNING_MESSAGE);
-                        System.out.println(frameDir.exists());
-                        System.out.println(frameDir.isDirectory());
-                        System.out.println(frameDir.getAbsoluteFile());
+                if (m_playState == PlayerState.PLAYING) {
+                    // If we're playing, then pause it.
+                    synchronized (LOCK) {
+                        m_playState = PlayerState.PAUSED;
                     }
+                    m_playPauseButton.setText("Play");
+                    m_stopButton.setEnabled(true);
+                } else if (m_playState == PlayerState.PAUSED) {
+                    // We're currently paused, so play it.
+                    synchronized (LOCK) {
+                        m_playState = PlayerState.PLAYING;
+                    }
+                    m_playPauseButton.setText("Paused");
+                    m_stopButton.setEnabled(true);
                 } else {
-                    JOptionPane.showMessageDialog(m_frame, "File must be a frame-recording.properties file.", "Error", JOptionPane.WARNING_MESSAGE);
+                    // If we're stopped, play it.
+                    String mediaFile = m_mediaField.getText();
+                    if (!mediaFile.isEmpty() || mediaFile.endsWith(VspProperties.getInstance().getFrameRecordingFilename())) {
+                        m_recording = FrameRecording.fromFile(m_mediaField.getText());
+                        File frameDir = new File(m_recording.getFrameDirectory());
+                        if (frameDir.exists() && frameDir.isDirectory()) {
+                            File[] frames = frameDir.listFiles(new FileFilter() {
+                                @Override
+                                public boolean accept(File file) {
+                                    if(file.getName().endsWith("jpg") || file.getName().endsWith("jpeg")) {
+                                        return true;
+                                    }
+                                    return false;
+                                }
+                            });
+
+                            PlayProcessor pp = new PlayProcessor(m_recording.getFrameDirectory());
+                            ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+                            m_future = executor.scheduleAtFixedRate(pp,
+                                                                    0L,
+                                                                    calculateFpsInMillis(m_recording.getFps()) / 2,
+                                                                    TimeUnit.MILLISECONDS);
+                            synchronized (LOCK) {
+                                m_playState = PlayerState.PLAYING;
+                            }
+                            m_playPauseButton.setText("Pause");
+                            m_stopButton.setEnabled(true);
+                        } else {
+                            JOptionPane.showMessageDialog(m_frame, "Media directory not found or is not a directory.  :(", "Error", JOptionPane.WARNING_MESSAGE);
+                            System.out.println(frameDir.exists());
+                            System.out.println(frameDir.isDirectory());
+                            System.out.println(frameDir.getAbsoluteFile());
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(m_frame, "File must be a frame-recording.properties file.", "Error", JOptionPane.WARNING_MESSAGE);
+                    }
                 }
             }
         });
+
+        m_stopButton = new JButton("Stop");
+        m_stopButton.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent ae) {
+                synchronized (LOCK) {
+                    m_playState = PlayerState.STOPPED;
+                }
+                m_stopButton.setEnabled(false);
+                m_playPauseButton.setText("Play");
+            }
+        });
+        m_stopButton.setEnabled(false);
 
         m_frameBackwardButton = new JButton("|<");
         m_frameBackwardButton.setToolTipText("Go backward a single frame.");
@@ -142,7 +189,7 @@ public class FrameRecordingPlayer {
         m_frameForwardButton = new JButton(">|");
         m_frameForwardButton.setToolTipText("Go Forward a single frame.");
 
-        m_playSpeedSelector = new JComboBox<>();
+        // Speed Selector
         m_playSpeedSelector.setRenderer(new ListCellRenderer<PlaySpeed>() {
             @Override
             public Component getListCellRendererComponent(JList jlist, PlaySpeed speed, int i, boolean bln, boolean bln1) {
@@ -152,11 +199,13 @@ public class FrameRecordingPlayer {
         for (PlaySpeed speed : PlaySpeed.values()) {
             m_playSpeedSelector.addItem(speed);
         }
+        m_playSpeedSelector.setSelectedItem(PlaySpeed.ONE_X);
 
         // Add the buttons
         panel.add(m_playSpeedSelector);
         panel.add(m_frameBackwardButton);
-        panel.add(m_playButton);
+        panel.add(m_playPauseButton);
+        panel.add(m_stopButton);
         panel.add(m_frameForwardButton);
 
         return panel;
@@ -172,7 +221,7 @@ public class FrameRecordingPlayer {
             @Override
             public void actionPerformed(ActionEvent ae) {
                 JFileChooser chooser = new JFileChooser();
-                FileNameExtensionFilter filter = new FileNameExtensionFilter("Frame Recordings", ".fr");
+                FileNameExtensionFilter filter = new FileNameExtensionFilter("Frame Recordings", "fr");
                 chooser.setFileFilter(filter);
                 if (chooser.showOpenDialog(m_frame) == JFileChooser.APPROVE_OPTION) {
                     m_mediaField.setText(chooser.getSelectedFile().getAbsolutePath());
@@ -196,31 +245,70 @@ public class FrameRecordingPlayer {
         /** The current frame cursor position. */
         private int m_cursor = 0;
 
+        /** The number of times this method has looped. */
+        private int m_loopCount;
+
         /**
          * Constructs a new instance of PlayProcessor.
          * @param frames the frames to play.
          */
-        public PlayProcessor(List<File> frames) {
-            m_frames = new ArrayList<>(frames);
+        public PlayProcessor(String frameDir) {
+            m_loopCount = 0;
+            m_frames = new ArrayList<>(Arrays.asList(new File(frameDir).listFiles()));
+            synchronized (LOCK) {
+                Collections.sort(m_frames);
+            }
         }
 
         /**
          * Updates the cursor position to the one specified.
          * @param position the position of the cursor to set.
          */
-        public void setCursor(int position) {
-            if (position < 0) {
-                m_cursor = 0;
-            } else if (position > m_frames.size() -1 ) {
-                m_cursor = m_frames.size() - 1;
-            } else {
-                m_cursor = position;
+        private void setCursor(int position) {
+            synchronized(LOCK) {
+                if (position < 0) {
+                    m_cursor = 0;
+                } else if (position > m_frames.size() -1 ) {
+                    m_cursor = m_frames.size() - 1;
+                } else {
+                    m_cursor = position;
+                }
             }
         }
 
         /** {@inheritDoc} */
         @Override
         public void run() {
+            synchronized (LOCK) {
+                if (m_playState == PlayerState.PLAYING) {
+                    switch ((PlaySpeed)m_playSpeedSelector.getSelectedItem()){
+                        case HALF_SPEED:
+                            if (m_loopCount % 4 == 0) {
+                                System.out.println("Half");
+                                updateFrame();
+                            }
+                            break;
+                        case ONE_X:
+                            if (m_loopCount % 2 == 0) {
+                                System.out.println("One");
+                                updateFrame();
+                            }
+                            break;
+                        case TWO_X:
+                            System.out.println("Two");
+                            updateFrame();
+                            break;
+                    }
+                    m_loopCount++;
+                } else if (m_playState == PlayerState.STOPPED && m_future != null) {
+                    m_future.cancel(false);
+                    m_screen.clear();
+                }
+            }
+        }
+
+        /** Updates the frame. */
+        private void updateFrame() {
             if (m_cursor == m_frames.size() - 1) {
                 m_cursor = 0;
             }
