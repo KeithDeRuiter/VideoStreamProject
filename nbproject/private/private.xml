@@ -3,11 +3,9 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/adam/Desktop/dev/vsp-hb/VideoStreamProject/src/vsp/processing/FfmpegVideoProcessor.java</file>
-            <file>file:/C:/Users/adam/Desktop/dev/vsp-hb/VideoStreamProject/src/vsp/data/FrameRecording.java</file>
-            <file>file:/C:/Users/adam/Desktop/dev/vsp-hb/VideoStreamProject/src/vsp/util/VspProperties.java</file>
-            <file>file:/C:/Users/adam/Desktop/dev/vsp-hb/VideoStreamProject/src/vsp/processing/StreamRecordingManager.java</file>
-            <file>file:/C:/Users/adam/Desktop/dev/vsp-hb/VideoStreamProject/config/application.properties</file>
+            <file>file:/C:/Users/adam/Desktop/dev/vsp-hb/VideoStreamProject/src/vsp/display/VideoBroadcastDisplay.java</file>
+            <file>file:/C:/Users/adam/Desktop/dev/vsp-hb/VideoStreamProject/src/vsp/RunLiveDisplay.java</file>
+            <file>file:/C:/Users/adam/Desktop/dev/vsp-hb/VideoStreamProject/src/vsp/VideoBroadcaster.java</file>
         </group>
     </open-files>
 </project-private>

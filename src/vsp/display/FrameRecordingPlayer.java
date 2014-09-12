@@ -13,9 +13,9 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -23,6 +23,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import vsp.data.FrameRecording;
 import vsp.util.VspProperties;
 
@@ -35,9 +36,7 @@ public class FrameRecordingPlayer {
     /** The top-level window of this display. */
     private JFrame m_frame;
 
-    /** The 'Screen' or video player area for this FrameRecordingPlayer. */
-    //private JLabel m_screen;
-
+    /** The 'screen' on which the images are rendered.  */
     private FrameViewer m_screen;
 
     /** The button to play the selected media. */
@@ -55,9 +54,8 @@ public class FrameRecordingPlayer {
     /** The text field for specifying the media. */
     private JTextField m_mediaField;
 
+    /**  */
     private FrameRecording m_recording;
-
-    private static final Logger LOGGER = Logger.getLogger(FrameRecordingPlayer.class.getName());
 
     /** Creates a new Frame Recording Player. */
     public FrameRecordingPlayer() {
@@ -168,10 +166,23 @@ public class FrameRecordingPlayer {
     private JPanel buildMediaSelectionPanel() {
         JPanel panel = new JPanel();
         JLabel label = new JLabel("FrameRecording.properties file:");
-        m_mediaField = new JTextField(50);
+        m_mediaField = new JTextField(45);
+        JButton browse = new JButton("Browse...");
+        browse.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent ae) {
+                JFileChooser chooser = new JFileChooser();
+                FileNameExtensionFilter filter = new FileNameExtensionFilter("Frame Recordings", ".fr");
+                chooser.setFileFilter(filter);
+                if (chooser.showOpenDialog(m_frame) == JFileChooser.APPROVE_OPTION) {
+                    m_mediaField.setText(chooser.getSelectedFile().getAbsolutePath());
+                }
+            }
+        });
 
         panel.add(label);
         panel.add(m_mediaField);
+        panel.add(browse);
 
         return panel;
     }
