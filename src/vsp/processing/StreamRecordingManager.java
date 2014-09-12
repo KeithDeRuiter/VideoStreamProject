@@ -10,7 +10,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import uk.co.caprica.vlcj.component.EmbeddedMediaPlayerComponent;
+import uk.co.caprica.vlcj.player.MediaPlayer;
+import uk.co.caprica.vlcj.player.MediaPlayerFactory;
+import uk.co.caprica.vlcj.player.headless.HeadlessMediaPlayer;
 import vsp.data.FileVideoSource;
 import vsp.data.VideoSource;
 import vsp.util.VspProperties;
@@ -36,7 +41,7 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
     private String m_recordingFilename;
 
     /** The period at which recording blocks are sent to processing. */
-    private final TimeUnit m_RecordingBlockFlushPeriod;
+    private final long m_recordingBlockFlushPeriod;
 
     /** The frames per second rate to record at. */
     private final int m_fps;
@@ -44,11 +49,8 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
     /** The quality level of the recording, specified by the implementation of {@code VideoProcessor} used. */
     private final int m_quality;
     
-    /** The executor service used to run threads in this class. */
-    private final ScheduledExecutorService m_scheduledExecutorService;
-    
     /** The media player used to receive the stream. */
-    private final EmbeddedMediaPlayerComponent m_mediaPlayerComponent;
+    private final HeadlessMediaPlayer m_mediaPlayer;
     
     /** The collection of all listeners to notify when recording ends. */
     private final Set<RecordingCompleteListener> m_listeners;
@@ -70,7 +72,7 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
      * @param snippetRecordingDuration The length of an individual snippet of
      * recording in the overlapping recordings.
      */
-    public StreamRecordingManager(VideoSource source, String recordingDirectory, TimeUnit snippetRecordingDuration) {
+    public StreamRecordingManager(VideoSource source, String recordingDirectory, long snippetRecordingDuration) {
         this(source, recordingDirectory, snippetRecordingDuration, VspProperties.getInstance().getRecordingFps(),
                 VspProperties.getInstance().getRecordingQuality());
     }
@@ -87,15 +89,15 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
      * implementation of {@code VideoProcessor} used.
      */
     public StreamRecordingManager(VideoSource source, String recordingDirectory,
-            TimeUnit snippetRecordingDuration, int fps, int quality) {
+            long snippetRecordingDuration, int fps, int quality) {
         m_source = source;
         m_videoLibraryDirectory = recordingDirectory;
-        m_RecordingBlockFlushPeriod = snippetRecordingDuration;
+        m_recordingBlockFlushPeriod = snippetRecordingDuration;
         m_fps = fps;
         m_quality = quality;
         
-        m_scheduledExecutorService = Executors.newScheduledThreadPool(4);
-        m_mediaPlayerComponent = new EmbeddedMediaPlayerComponent();
+        MediaPlayerFactory mediaPlayerFactory = new MediaPlayerFactory();
+        m_mediaPlayer = mediaPlayerFactory.newHeadlessMediaPlayer();
         m_listeners = new HashSet<>();
         m_periodicFuture = null;
  
@@ -115,7 +117,7 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
         File recordingDirectoryFile = new File(m_recordingDirectory);
         recordingDirectoryFile.mkdirs();
         String[] options = {":sout=#standard{mux=ts,access=file,dst=" + tsFilePath + "}"};
-        m_mediaPlayerComponent.getMediaPlayer().playMedia(mediaUrl, options);
+        m_mediaPlayer.playMedia(mediaUrl, options);
         
         launchPeriodicProcessor(tsFilePath);
     }
@@ -127,14 +129,14 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
     private void launchPeriodicProcessor(String tsFilePath) {
         Runnable r = new PeriodicProcessorRunnable(tsFilePath);
         ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
-        m_periodicFuture = ses.scheduleAtFixedRate(r, 0L, 10L, TimeUnit.SECONDS);
+        m_periodicFuture = ses.scheduleAtFixedRate(r, 1L, m_recordingBlockFlushPeriod, TimeUnit.SECONDS);
     }
 
     /**
      * Stops recording.
      */
     public void stopRecording() {
-        m_mediaPlayerComponent.getMediaPlayer().stop();
+        m_mediaPlayer.stop();
         for(RecordingCompleteListener l : m_listeners) {
             l.recordingComplete(m_source);
         }
@@ -211,9 +213,12 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
                     FileVideoSource source = new FileVideoSource(m_sourceFilepath);
                     try {
                         File recordingDir = new File(m_recordingDirectory);
-                        ffmpvp.ripFrames(source, 30, 3, recordingDir.getAbsolutePath(), 0, 0);
+                        Process frameProcess = ffmpvp.ripFrames(source, 30, 3, recordingDir.getAbsolutePath(), 0, 0);
+                        frameProcess.waitFor(); //Wait for the processing to complete
                     } catch (IOException ex) {
-                        ex.printStackTrace();
+                        Logger.getLogger(StreamRecordingManager.class.getName()).log(Level.SEVERE, "IO Exception while processing frames", ex);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(StreamRecordingManager.class.getName()).log(Level.SEVERE, "Frame Processing thread interrupted", ex);
                     }
                 }
             };
