@@ -23,6 +23,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import vsp.processing.MulticastDataDetectionListener;
 import vsp.processing.MulticastDataDetector;
+import vsp.processing.StreamRecordingManager;
 
 /**
  * A utility display for listening to record video.
@@ -174,11 +175,13 @@ public class StreamRecorderDisplay implements MulticastDataDetectionListener {
 
     @Override
     public void streamStarted() {
+        Logger.getLogger(StreamRecorderDisplay.class.getName()).info("Stream Started in recorder display");
         connected();
     }
 
     @Override
     public void streamEnded() {
+        Logger.getLogger(StreamRecorderDisplay.class.getName()).info("Stream Stopped in recorder display");
         disconnected();
     }
 }

@@ -23,6 +23,7 @@ public class FfmpegVideoProcessor {
      * @param quality The image quality to rip to.  Values range from 1 to 31, with 1 being the highest quality and 31
      * being the lowest quality.
      * @param outputDir a directory to write the frames to.
+     * @param batchIndex the index of which snippet this image falls under.
      *
      * @return The process started to rip the frames.
      * 
@@ -30,7 +31,7 @@ public class FfmpegVideoProcessor {
      * of the valid range (1-31).
      * @throws IOException if the process cannot be started.
      */
-    public Process ripFrames(FileVideoSource sourceVideo, int fps, int quality, String outputDir) throws IOException {
+    public static Process ripFrames(FileVideoSource sourceVideo, int fps, int quality, String outputDir, int batchIndex) throws IOException {
         // Sample command String:
         //      ffmpeg -i toRip.ts -q 3 -r 30 -f image2 ./output/image-%%08d.jpg
         VspProperties props = VspProperties.getInstance();
@@ -45,7 +46,7 @@ public class FfmpegVideoProcessor {
         command.add(String.valueOf(fps));        // FPS value.
         command.add("-f");                       // Output image Format
         command.add("image2");                   // Output image Format
-        command.add(outputDir + "img-%08d.jpg"); // Output Directory and File Format - (DO WE NEED %% here?  or just %?)
+        command.add(outputDir + String.format("%06d", batchIndex) + "-%04d.jpg"); // Output Directory and File Format - (DO WE NEED %% here?  or just %?)
 
         ProcessBuilder pb = new ProcessBuilder(command);
         Process process = pb.start();

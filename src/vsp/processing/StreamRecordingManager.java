@@ -58,11 +58,9 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
     /** The Future object representing the scheduled periodic task. */
     private Future m_periodicFuture;
 
+    /** The batch index for snippets as processing advances. */
+    private int m_batchIndex;
 
-    /**
-     * The processor used to record and rip the individual frames.
-     */
-    private final static FfmpegVideoProcessor ffmpvp = new FfmpegVideoProcessor();
 
     /**
      * Constructs a new instance of {@code StreamRecordingManager}.
@@ -95,6 +93,7 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
         m_recordingBlockFlushPeriod = snippetRecordingDuration;
         m_fps = fps;
         m_quality = quality;
+        m_batchIndex = 0;
         
         MediaPlayerFactory mediaPlayerFactory = new MediaPlayerFactory();
         m_mediaPlayer = mediaPlayerFactory.newHeadlessMediaPlayer();
@@ -243,7 +242,8 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
                     FileVideoSource source = new FileVideoSource(snippetPath);
                     try {
                         Logger.getLogger(StreamRecordingManager.class.getName()).info("Launching FFMPEG Process");
-                        Process frameProcess = ffmpvp.ripFrames(source, 30, 3, m_recordingDirectory);
+                        Process frameProcess = FfmpegVideoProcessor.ripFrames(source, 30, 3, m_recordingDirectory, m_batchIndex);
+                        m_batchIndex++;
                         Logger.getLogger(StreamRecordingManager.class.getName()).info("Waiting for FFMPEG Process...");
                         frameProcess.waitFor(); //Wait for the processing to complete
                         //remove scratch material

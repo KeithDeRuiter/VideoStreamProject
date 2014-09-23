@@ -85,7 +85,8 @@ public class MulticastDataDetector implements Runnable, RecordingCompleteListene
             //Kick off processing
             String frameRecordingDirectory = VspProperties.getInstance().getRecordingLibraryDirectory();
             StreamRecordingManager srm = new StreamRecordingManager(new StreamVideoSource(m_ipAddress, m_port, "Source"), frameRecordingDirectory, 10L);
-
+            srm.addRecordingCompleteListener(this);
+            
             srm.startRecording();
             
             try {
@@ -106,7 +107,9 @@ public class MulticastDataDetector implements Runnable, RecordingCompleteListene
         
     /** Tells the detector the current stream ended, so go back to listening for new data streams. */
     synchronized public void continueListening() {
+        //Logger.getLogger(MulticastDataDetector.class.getName()).info("Continuing to listen...");
         m_listeningSemaphore.release();
+        //Logger.getLogger(MulticastDataDetector.class.getName()).info("Listening semaphore released");
     }
     
     /** {@inheritDoc} */
@@ -127,6 +130,8 @@ public class MulticastDataDetector implements Runnable, RecordingCompleteListene
 
     /** Notifies all multicast data detection listeners that the stream has started. */
     private void notifyStreamStart() {
+        Logger.getLogger(MulticastDataDetector.class.getName()).info("Notifying Stream Start");
+
         for(MulticastDataDetectionListener l : m_multicastDataDetectionListeners) {
             l.streamStarted();
         }
@@ -134,6 +139,8 @@ public class MulticastDataDetector implements Runnable, RecordingCompleteListene
 
     /** Notifies all multicast data detection listeners that the stream has stopped. */
     private void notifyStreamStop() {
+        Logger.getLogger(MulticastDataDetector.class.getName()).info("Notifying Stream Stop");
+        
         for(MulticastDataDetectionListener l : m_multicastDataDetectionListeners) {
             l.streamEnded();
         }
