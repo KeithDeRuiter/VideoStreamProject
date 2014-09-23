@@ -180,7 +180,7 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
         private final String m_sourceFilepath;
         
         /** The cursor index into the file we are reading data from. */
-        private int cursor = 0;
+        private int m_cursor = 0;
 
         /**
          * Constructs a new instance of PeriodicProcessorRunnable.
@@ -197,49 +197,45 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
 
             //Read In the file to rip frames from
             File f = new File(m_sourceFilepath);
-            FileInputStream fis = null;
-            try {
-                fis = new FileInputStream(f);
-            } catch (FileNotFoundException ex) {
-                Logger.getLogger(StreamRecordingManager.class.getName()).log(Level.SEVERE, "Source file not found", ex);
-            }
-
-            int length = (int) f.length();
-            int numNewBytes = length - cursor;
-            Logger.getLogger(StreamRecordingManager.class.getName()).info("Number of new bytes found in source file: " + numNewBytes);
-            if(numNewBytes == 0) {
-                stopRecording();
-                return;
-            }
+            int length = 0;
             
-            byte[] bytes = new byte[numNewBytes];
+            try(FileInputStream fis = new FileInputStream(f)) {
+                length = (int) f.length();
+                int numNewBytes = length - m_cursor;
+                Logger.getLogger(StreamRecordingManager.class.getName()).info("Number of new bytes found in source file: " + numNewBytes);
+                if(numNewBytes == 0) {
+                    stopRecording();
+                    return;
+                }
 
-            //Skip bytes behind the cursor and read the new ones
-            try {
+                //Copy bytes into memory
+                byte [] bytes = new byte[numNewBytes];
+
+                //Skip bytes behind the cursor and read the new ones
                 //System.out.println("Reading file... cursor = " + cursor + " length = " + length + " L-C = " + (length - cursor));
-                fis.skip(cursor);
+                fis.skip(m_cursor);
                 fis.read(bytes, 0, numNewBytes);
-            } catch (IOException ex) {
-                Logger.getLogger(StreamRecordingManager.class.getName()).log(Level.SEVERE, "IOException skipping through and reading source file", ex);
-            }
-            
-            //Reset cursor to end of file
-            cursor = (int) length;
-            
-            //Write scratch recording snippet for ffmpeg to pull from
-            final String snippetPath = VspProperties.getInstance().getScratchDirectory() + "/" + System.currentTimeMillis();
-            File scratchRecordingSnippet = new File(snippetPath);
-            FileOutputStream fos;
-            try {
-                fos = new FileOutputStream(scratchRecordingSnippet);
-                fos.write(bytes);
-            } catch (FileNotFoundException ex) {
-                Logger.getLogger(StreamRecordingManager.class.getName()).log(Level.SEVERE, "Failed to find file for writing scratch snippet file", ex);
-            } catch (IOException ex) {
-                Logger.getLogger(StreamRecordingManager.class.getName()).log(Level.SEVERE, "IOException writing scratch snippet file", ex);
-            }
-            
+                
+                //Reset cursor to end of file
+                m_cursor = (int) length;
 
+                //Write scratch recording snippet for ffmpeg to pull from
+                String snippetPath = VspProperties.getInstance().getScratchDirectory() + "/" + System.currentTimeMillis();
+                File scratchRecordingSnippet = new File(snippetPath);
+                try (FileOutputStream fos = new FileOutputStream(scratchRecordingSnippet)) {
+                    fos.write(bytes);
+                }
+                
+                launchFrameRipperForFile(snippetPath);
+                
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(StreamRecordingManager.class.getName()).log(Level.SEVERE, "Source or Destination file not found", ex);
+            } catch (IOException ex) {
+                Logger.getLogger(StreamRecordingManager.class.getName()).log(Level.SEVERE, "IOException in Periodic Process", ex);
+            }
+        }
+        
+        private void launchFrameRipperForFile(final String snippetPath) {
             //Start FFMPEG to rip frames
             Runnable ffmpegRunnable = new Runnable() {
                 @Override
