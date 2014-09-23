@@ -41,6 +41,7 @@ public class FrameRecordingPlayer {
     /** The 'screen' on which the images are rendered.  */
     private FrameViewer m_screen;
 
+    /** The current state of the player. */
     private PlayerState m_playState;
 
     /** The button to play the selected media. */
@@ -136,16 +137,6 @@ public class FrameRecordingPlayer {
                         m_recording = FrameRecording.fromFile(m_mediaField.getText());
                         File frameDir = new File(m_recording.getFrameDirectory());
                         if (frameDir.exists() && frameDir.isDirectory()) {
-                            File[] frames = frameDir.listFiles(new FileFilter() {
-                                @Override
-                                public boolean accept(File file) {
-                                    if(file.getName().endsWith("jpg") || file.getName().endsWith("jpeg")) {
-                                        return true;
-                                    }
-                                    return false;
-                                }
-                            });
-
                             PlayProcessor pp = new PlayProcessor(m_recording.getFrameDirectory());
                             ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
                             m_future = executor.scheduleAtFixedRate(pp,
@@ -254,7 +245,13 @@ public class FrameRecordingPlayer {
          */
         public PlayProcessor(String frameDir) {
             m_loopCount = 0;
-            m_frames = new ArrayList<>(Arrays.asList(new File(frameDir).listFiles()));
+            File[] frames = new File(frameDir).listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File file) {
+                    return file.getName().endsWith("jpg") || file.getName().endsWith("jpeg");
+                }
+            });
+            m_frames = new ArrayList<>(Arrays.asList(frames));
             synchronized (LOCK) {
                 Collections.sort(m_frames);
             }
@@ -284,18 +281,15 @@ public class FrameRecordingPlayer {
                     switch ((PlaySpeed)m_playSpeedSelector.getSelectedItem()){
                         case HALF_SPEED:
                             if (m_loopCount % 4 == 0) {
-                                System.out.println("Half");
                                 updateFrame();
                             }
                             break;
                         case ONE_X:
                             if (m_loopCount % 2 == 0) {
-                                System.out.println("One");
                                 updateFrame();
                             }
                             break;
                         case TWO_X:
-                            System.out.println("Two");
                             updateFrame();
                             break;
                     }

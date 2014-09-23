@@ -13,18 +13,19 @@ import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import uk.co.caprica.vlcj.component.EmbeddedMediaPlayerComponent;
+import vsp.util.VspProperties;
 
 /**
- * The main display class of the LiveDisplay application for displaying streams.  Includes the media player, source 
+ * The main display class of the LiveDisplay application for displaying streams.  Includes the media player, source
  * entry, and controls.
- * 
+ *
  * @author Keith
  */
 public class LiveDisplay {
 
     /** The main frame for this display. */
     private final JFrame m_frame;
-    
+
     /** The embedded VLCJ media player. */
     private EmbeddedMediaPlayerComponent m_mediaPlayerComponent;
 
@@ -33,16 +34,16 @@ public class LiveDisplay {
 
     /** The Stop Button for the stream. */
     JButton m_stopButton;
-    
+
     /** The volume slider. */
     JSlider m_volumeSlider;
-    
+
     /** The stream source MRL field. */
     JTextField m_mrlSourceTextFied;
-    
+
     /** The enter button for the MRL link. */
     JButton m_mrlConfirmButton;
-    
+
     /** Constructs a new instance of {@code LiveDisplay}. */
     public LiveDisplay() {
         m_frame = new JFrame("Live Display");
@@ -56,10 +57,10 @@ public class LiveDisplay {
         m_frame.setLocation(100, 100);
         m_frame.setPreferredSize(new Dimension(1050, 600));
         m_frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        
+
         //Media Player init
         m_mediaPlayerComponent = new EmbeddedMediaPlayerComponent();
-        
+
         //UI init
         m_playButton = new JButton("Play");
         m_stopButton = new JButton("Stop");
@@ -70,8 +71,10 @@ public class LiveDisplay {
         m_volumeSlider.setPaintTicks(true);
         m_volumeSlider.setPaintLabels(true);
         m_mrlSourceTextFied = new JTextField(40);
+        VspProperties vspProps = VspProperties.getInstance();
+        m_mrlSourceTextFied.setText("rtp://@" + vspProps.getDefaultIpAddress() + ":" + vspProps.getPort());
         m_mrlConfirmButton = new JButton("Enter");
-        
+
         m_playButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent ae) {
@@ -85,7 +88,7 @@ public class LiveDisplay {
                 m_mediaPlayerComponent.getMediaPlayer().stop();
             }
         });
-        
+
         m_volumeSlider.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent ce) {
@@ -93,7 +96,7 @@ public class LiveDisplay {
                 m_mediaPlayerComponent.getMediaPlayer().setVolume(vol);
             }
         });
-        
+
         m_mrlConfirmButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent ae) {
@@ -101,17 +104,17 @@ public class LiveDisplay {
                 m_mediaPlayerComponent.getMediaPlayer().playMedia(mrl);
             }
         });
-        
+
         //Component Assembly
         m_frame.add(m_mediaPlayerComponent, BorderLayout.CENTER);
-        
+
         JPanel controlPanel = new JPanel();
         controlPanel.add(m_playButton);
         controlPanel.add(m_stopButton);
         controlPanel.add(new JLabel("Volume:"));
         controlPanel.add(m_volumeSlider);
         m_frame.add(controlPanel, BorderLayout.SOUTH);
-        
+
         JPanel mrlPanel = new JPanel();
         mrlPanel.add(new JLabel("MRL Source:"));
         mrlPanel.add(m_mrlSourceTextFied);
@@ -126,14 +129,14 @@ public class LiveDisplay {
         m_frame.pack();
         m_frame.setVisible(true);
     }
-    
-    /** 
+
+    /**
      * Plays the given media file.
-     * 
+     *
      * @param filename the name of the media file to play
      */
     public void play(String filename) {
         m_mediaPlayerComponent.getMediaPlayer().playMedia(filename);
     }
-    
+
 }

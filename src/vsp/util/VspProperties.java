@@ -67,6 +67,14 @@ public class VspProperties {
     private static final int RECORDING_QUALITY_DEFAULT = 3;
     private int m_recordingQuality;
 
+    /** IP Address settings. */
+    private static final String DEFAULT_IP_PROPERTY = "default.ip";
+    private static final String DEFAULT_IP = "226.0.67.1";
+    private String m_defaultIp;
+
+    private static final String PORT_PROPERTY = "default.port";
+    private static final int PORT_DEFAULT = 44500;
+    private int m_port;
 
 
     /** Private constructor, enforces Singleton pattern. */
@@ -154,6 +162,15 @@ public class VspProperties {
             m_recordingFps = Integer.valueOf(recordingFps);
         }
 
+        // Recording fps value
+        String defaultIp = properties.getProperty(DEFAULT_IP_PROPERTY);
+        if (defaultIp == null){
+            LOGGER.config("Error reading default IP address (value was null), using default:  " + DEFAULT_IP);
+            m_defaultIp = DEFAULT_IP;
+        } else {
+            m_defaultIp = recordingFps;
+        }
+
         // Recording quality value
         String recordingQuality = properties.getProperty(RECORDING_QUALITY_PROPERTY);
         if (recordingQuality == null){
@@ -161,6 +178,14 @@ public class VspProperties {
             m_recordingQuality = RECORDING_QUALITY_DEFAULT;
         } else {
             m_recordingQuality = Integer.valueOf(recordingQuality);
+        }
+
+        String port = properties.getProperty(PORT_PROPERTY);
+        if (port == null){
+            LOGGER.config("Error reading recording quality property (value was null), using default:  " + PORT_DEFAULT);
+            m_port = PORT_DEFAULT;
+        } else {
+            m_port = Integer.valueOf(port);
         }
     }
 
@@ -198,6 +223,14 @@ public class VspProperties {
 
     public String getScratchDirectory() {
         return m_scratchDir;
+    }
+
+    public String getDefaultIpAddress() {
+        return m_defaultIp;
+    }
+
+    public int getPort() {
+        return m_port;
     }
 
     public int getRecordingFps() {
