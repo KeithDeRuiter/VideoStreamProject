@@ -69,6 +69,7 @@ public class MulticastDataDetector implements Runnable, RecordingCompleteListene
                         //Kick off processing
                         String frameRecordingDirectory = VspProperties.getInstance().getRecordingLibraryDirectory();
                         StreamRecordingManager srm = new StreamRecordingManager(new StreamVideoSource(m_ipAddress, m_port, "Source"), frameRecordingDirectory, 10L);
+                        srm.addRecordingCompleteListener(MulticastDataDetector.this);
                         srm.startRecording();
 
                         // Notify listeners of stream start.
@@ -88,6 +89,7 @@ public class MulticastDataDetector implements Runnable, RecordingCompleteListene
     /** {@inherit} */
     @Override
     public void recordingComplete(VideoSource source) {
+        LOGGER.info("MDD - Recording Complete called.");
         m_streamActive = false;
         notifyStreamStop();
     }
@@ -104,7 +106,7 @@ public class MulticastDataDetector implements Runnable, RecordingCompleteListene
     /** Notifies all multicast data detection listeners that the stream has stopped. */
     private void notifyStreamStop() {
         Logger.getLogger(MulticastDataDetector.class.getName()).info("Notifying Stream Stop");
-        
+
         for(MulticastDataDetectionListener l : m_multicastDataDetectionListeners) {
             l.streamEnded();
         }
