@@ -5,7 +5,6 @@ import vsp.util.VspUtilities;
 
 /**
  * Main launcher class for the LiveDisplay.
- *
  * @author Keith
  */
 public class RunLiveDisplay {

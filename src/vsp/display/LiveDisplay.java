@@ -122,9 +122,7 @@ public class LiveDisplay {
         m_frame.add(mrlPanel, BorderLayout.NORTH);
     }
 
-    /**
-     * Packs and sets the main frame visible.
-     */
+    /** Packs and sets the main frame visible. */
     public void launch() {
         m_frame.pack();
         m_frame.setVisible(true);
@@ -132,11 +130,9 @@ public class LiveDisplay {
 
     /**
      * Plays the given media file.
-     *
      * @param filename the name of the media file to play
      */
     public void play(String filename) {
         m_mediaPlayerComponent.getMediaPlayer().playMedia(filename);
     }
-
 }

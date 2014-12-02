@@ -4,7 +4,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * A class that represents a Video Source.
+ * A class that represents a Video Source.  This can be a file, a stream or whatever.
  * @author adam
  */
 public abstract class VideoSource {
@@ -75,10 +75,9 @@ public abstract class VideoSource {
         }
         return true;
     }
-    
+
     /**
-     * Gets the source of the media as an MRL String.
-     * 
+     * Gets the source of the media as an MRL (Media Resource Locator) String.
      * @return the MRL
      */
     public abstract String getMrl();

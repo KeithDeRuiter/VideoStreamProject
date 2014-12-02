@@ -16,8 +16,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
+import uk.co.caprica.vlcj.player.MediaPlayer;
 import uk.co.caprica.vlcj.player.MediaPlayerFactory;
-import uk.co.caprica.vlcj.player.headless.HeadlessMediaPlayer;
 import vsp.data.VideoBroadcast;
 
 /**
@@ -51,6 +51,16 @@ public class VideoBroadcastDisplay {
     /** A button for launching the file chooser. */
     private JButton m_browseButton;
 
+    /** A media player for playing/broadcasting the media. */
+    private MediaPlayer m_mediaPlayer;
+
+    /** A Start Button for starting the broadcast stream. */
+    private JButton m_startButton;
+
+    /** A Stop Button for stopping the broadcast stream. */
+    private JButton m_stopButton;
+
+
     /** Constructs a new VBD. */
     public VideoBroadcastDisplay() {
         initialize();
@@ -64,9 +74,9 @@ public class VideoBroadcastDisplay {
     public void stream(VideoBroadcast toStream) throws IOException {
         String options = formatRtpStream(toStream.getIpAddress(), toStream.getPort());
 
-        MediaPlayerFactory mediaPlayerFactory = new MediaPlayerFactory(toStream.getTsFile());
-        HeadlessMediaPlayer mediaPlayer = mediaPlayerFactory.newHeadlessMediaPlayer();
-        mediaPlayer.playMedia(toStream.getTsFile(),
+        MediaPlayerFactory mediaPlayerFactory = new MediaPlayerFactory(toStream.getVideoFile());
+        m_mediaPlayer = mediaPlayerFactory.newHeadlessMediaPlayer();
+        m_mediaPlayer.playMedia(toStream.getVideoFile(),
             options,
             ":no-sout-rtp-sap",
             ":no-sout-standard-sap",
@@ -108,22 +118,43 @@ public class VideoBroadcastDisplay {
         m_frame.add(buildContentPanel(), BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel();
-        JButton startButton = new JButton("Start");
-        startButton.addActionListener(new ActionListener() {
+        m_startButton = new JButton("Start");
+        m_startButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent ae) {
                 try {
+                    m_stopButton.setEnabled(true);
+                    m_startButton.setEnabled(false);
                     stream(getVideoBroadcast());
                 } catch (IOException ex) {
                     LOGGER.log(Level.SEVERE, "Error starting stream.", ex);
                 }
             }
         });
-        buttonPanel.add(startButton);
+
+        m_stopButton = new JButton("Stop");
+        m_stopButton.setEnabled(false);
+        m_stopButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent ae) {
+                m_stopButton.setEnabled(false);
+                m_startButton.setEnabled(true);
+                if (m_mediaPlayer != null) {
+                    m_mediaPlayer.stop();
+                }
+            }
+        });
+
+        buttonPanel.add(m_startButton);
+        buttonPanel.add(m_stopButton);
 
         m_frame.add(buttonPanel, BorderLayout.PAGE_END);
     }
 
+    /**
+     * Returns the video broadcast that is described in the file, IP and port fields.
+     * @return the video broadcast that is described in the file, IP and port fields.
+     */
     private VideoBroadcast getVideoBroadcast() {
         return new VideoBroadcast(m_fileField.getText().trim(),
                                     m_ipField.getText().trim(),
