@@ -72,13 +72,13 @@ public class MulticastDataDetector implements Runnable, RecordingCompleteListene
         InetAddress group = InetAddress.getByName(m_ipAddress);
         MulticastSocket s = new MulticastSocket(m_port);
         s.joinGroup(group);
-        byte[] buf = new byte[1000];
-        DatagramPacket recv = new DatagramPacket(buf, buf.length);
         
         boolean listening = true;
         while(listening) {
             //Receive data, so we notice that data is coming over.  We don't actually receive the data here!
             //VLC actually grabs the data for us, this is just a "is data there" detection mechanism.
+            byte[] buf = new byte[1500];
+            DatagramPacket recv = new DatagramPacket(buf, buf.length);
             s.receive(recv);
             notifyStreamStart();
             

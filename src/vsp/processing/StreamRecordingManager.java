@@ -61,7 +61,9 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
     /** The batch index for snippets as processing advances. */
     private int m_batchIndex;
 
-
+    /** The executor used to start new threads. */
+    ScheduledExecutorService m_ses;
+    
     /**
      * Constructs a new instance of {@code StreamRecordingManager}.
      *
@@ -94,6 +96,7 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
         m_fps = fps;
         m_quality = quality;
         m_batchIndex = 0;
+        m_ses = Executors.newSingleThreadScheduledExecutor();
         
         MediaPlayerFactory mediaPlayerFactory = new MediaPlayerFactory();
         m_mediaPlayer = mediaPlayerFactory.newHeadlessMediaPlayer();
@@ -136,8 +139,7 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
      */
     private void launchPeriodicProcessor(String tsFilePath) {
         Runnable r = new PeriodicProcessorRunnable(tsFilePath);
-        ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
-        m_periodicFuture = ses.scheduleAtFixedRate(r, 5L, m_recordingBlockFlushPeriod, TimeUnit.SECONDS);
+        m_periodicFuture = m_ses.scheduleAtFixedRate(r, 5L, m_recordingBlockFlushPeriod, TimeUnit.SECONDS);
     }
 
     /**
