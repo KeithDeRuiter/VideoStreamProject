@@ -16,7 +16,7 @@ import javax.imageio.ImageIO;
 import javax.swing.JComponent;
 
 /**
- *
+ * An extremely basic JComponent that renders images
  * @author adam
  */
 public class FrameViewer extends JComponent {
@@ -39,7 +39,7 @@ public class FrameViewer extends JComponent {
         try {
             m_image = ImageIO.read(new File(pathToImage));
         } catch (IOException ex) {
-            LOGGER.log(Level.INFO, "Unable to read image:  " + pathToImage + ".  Ignoring frame.");
+            LOGGER.log(Level.INFO, "Unable to read image:  '" + pathToImage + "'.  Ignoring frame.");
             m_image = null;
         }
         repaint();
@@ -51,7 +51,11 @@ public class FrameViewer extends JComponent {
         repaint();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * This is pretty cheese-ball, but gets the job done for this proof of concept application.  There are very
+     * likely some good ways to optimize this, which we should totally take advantage of them.
+     * {@inheritDoc}
+     */
     public void paint(Graphics g) {
         // Setup Graphics 2D
         Graphics2D g2d = (Graphics2D)g;

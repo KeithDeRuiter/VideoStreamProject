@@ -30,9 +30,6 @@ import vsp.processing.MulticastDataDetector;
  */
 public class StreamRecorderDisplay implements MulticastDataDetectionListener {
 
-    /** LOGGER */
-    private static final Logger LOGGER = Logger.getLogger(StreamRecorderDisplay.class.getName());
-
     /** The default IP address. */
     private final String m_defaultIp = "226.0.67.1";
 
@@ -47,10 +44,10 @@ public class StreamRecorderDisplay implements MulticastDataDetectionListener {
 
     /** A text field for the port value. */
     private JTextField m_portField;
-    
+
     /** Lamp for if the stream is active. */
     private JLabel m_connectionLabel;
-    
+
     /** The data detector for the recording. */
     private MulticastDataDetector m_dataDetector;
 
@@ -58,7 +55,7 @@ public class StreamRecorderDisplay implements MulticastDataDetectionListener {
     public StreamRecorderDisplay() {
         initialize();
     }
-    
+
     /** Begins listening for streams. */
     private void listen() {
         //Grap port/ip from UI
@@ -69,7 +66,7 @@ public class StreamRecorderDisplay implements MulticastDataDetectionListener {
             Logger.getLogger(StreamRecorderDisplay.class.getName()).log(Level.SEVERE, "Poorly formatted IP Address:  " + m_ipField.getText(), ex);
         }
         int port = Integer.valueOf(m_portField.getText().trim());
-        
+
         //Start detector
         m_dataDetector = new MulticastDataDetector(ip, port);
         m_dataDetector.addMulticastDataDetectionListener(this);
@@ -99,7 +96,7 @@ public class StreamRecorderDisplay implements MulticastDataDetectionListener {
             }
         });
         buttonPanel.add(startButton);
-        
+
         m_connectionLabel = new JLabel("Disconnected");
         m_connectionLabel.setOpaque(true);
         m_connectionLabel.setBackground(Color.RED);
@@ -107,7 +104,7 @@ public class StreamRecorderDisplay implements MulticastDataDetectionListener {
         m_connectionLabel.setPreferredSize(new Dimension(100, 26));
         m_connectionLabel.setHorizontalAlignment(SwingConstants.CENTER);
         buttonPanel.add(m_connectionLabel);
-        
+
         m_frame.add(buttonPanel, BorderLayout.PAGE_END);
     }
 
@@ -116,13 +113,13 @@ public class StreamRecorderDisplay implements MulticastDataDetectionListener {
         m_connectionLabel.setBackground(Color.RED);
         m_connectionLabel.setText("Disconnected");
     }
-    
+
     /** Changes to connected status. */
     private void connected() {
         m_connectionLabel.setBackground(Color.GREEN);
         m_connectionLabel.setText("Connected");
     }
-    
+
     /**
      * Assembles and returns the JPanel with the main controls and content on it.
      * @return the main content panel.
@@ -172,11 +169,13 @@ public class StreamRecorderDisplay implements MulticastDataDetectionListener {
         return content;
     }
 
+    /** {@inheritDoc} */
     @Override
     public void streamStarted() {
         connected();
     }
 
+    /** {@inheritDoc} */
     @Override
     public void streamEnded() {
         disconnected();

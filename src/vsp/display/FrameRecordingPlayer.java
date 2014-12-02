@@ -257,22 +257,6 @@ public class FrameRecordingPlayer {
             }
         }
 
-        /**
-         * Updates the cursor position to the one specified.
-         * @param position the position of the cursor to set.
-         */
-        private void setCursor(int position) {
-            synchronized(LOCK) {
-                if (position < 0) {
-                    m_cursor = 0;
-                } else if (position > m_frames.size() -1 ) {
-                    m_cursor = m_frames.size() - 1;
-                } else {
-                    m_cursor = position;
-                }
-            }
-        }
-
         /** {@inheritDoc} */
         @Override
         public void run() {

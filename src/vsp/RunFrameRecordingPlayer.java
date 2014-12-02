@@ -4,7 +4,7 @@ import vsp.display.FrameRecordingPlayer;
 import vsp.util.VspUtilities;
 
 /**
- *
+ * A Main to launch the Frame Recording Player.
  * @author adam
  */
 public class RunFrameRecordingPlayer {

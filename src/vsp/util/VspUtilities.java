@@ -12,12 +12,12 @@ import uk.co.caprica.vlcj.runtime.RuntimeUtil;
  */
 public class VspUtilities {
 
-    /** */
+    /** Initializes the logging configuration for a VSP application. */
     public static void initLogging() {
         System.setProperty("java.util.logging.config.file", "./config/logging.properties");
     }
 
-    /**Loads the appropriate VLC Native libs for the current operating system. */
+    /** Loads the appropriate VLC Native libs for the current operating system. */
     public static void loadVlcNativeLibs() {
         String osName = System.getProperty("os.name");
         VspProperties props = VspProperties.getInstance();

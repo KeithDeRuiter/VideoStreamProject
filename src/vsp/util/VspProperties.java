@@ -25,56 +25,56 @@ public class VspProperties {
     /** Windows VLC Members. */
     private static final String WIN_VLC_PATH_PROPERTY = "windows.vlc.path";
     private static final String WIN_VLC_PATH_DEFAULT = "C:\\Program Files\\VideoLAN\\VLC";
-    private String m_winVlcPath;
+    private final String m_winVlcPath;
 
     /** Macintosh VLC Members. */
     private static final String MAC_VLC_PATH_PROPERTY = "mac.vlc.path";
     private static final String MAC_VLC_PATH_DEFAULT = "/usr/bin/vlc";
-    private String m_macVlcPath;
+    private final String m_macVlcPath;
 
     /** Linux VLC Members. */
     private static final String NIX_VLC_PATH_PROPERTY = "nix.vlc.path";
     private static final String NIX_VLC_PATH_DEFAULT = "/usr/bin/vlc";
-    private String m_nixVlcPath;
+    private final String m_nixVlcPath;
 
     /** FFMPEG Location. */
     private static final String FFMPEG_PATH_PROPERTY = "ffmpeg.path";
     private static final String FFMPEG_PATH_DEFAULT = "./res/ffmpeg.exe";
-    private String m_ffmpegPath;
+    private final String m_ffmpegPath;
 
     /** Frame Recording storage directory. */
     private static final String RECORDING_LIBRARY_DIR_PROPERTY = "recording.library.dir";
     private static final String RECORDING_LIBRARY_DIR_DEFAULT = "./recordings/";
-    private String m_recordingLibraryDir;
+    private final String m_recordingLibraryDir;
 
     /** Frame Recording meta data file property. */
     private static final String FRAME_RECORDING_FILE_PROPERTY = "frame.recording.filename";
     private static final String FRAME_RECORDING_FILE_DEFAULT = "metadata.fr";
-    private String m_frameRecordingFileName;
+    private final String m_frameRecordingFileName;
 
     /** Scratch / Temp directory. */
     private static final String SCRATCH_DIR_PROPERTY = "scratch.dir";
     private static final String SCRATCH_DIR_DEFAULT = "./scratch/";
-    private String m_scratchDir;
+    private final String m_scratchDir;
 
     /** Recording FPS value. */
     private static final String RECORDING_FPS_PROPERTY = "default.recording.fps";
     private static final int RECORDING_FPS_DEFAULT = 30;
-    private int m_recordingFps;
+    private final int m_recordingFps;
 
     /** Recording quality value. */
     private static final String RECORDING_QUALITY_PROPERTY = "default.recording.quality";
     private static final int RECORDING_QUALITY_DEFAULT = 3;
-    private int m_recordingQuality;
+    private final int m_recordingQuality;
 
     /** IP Address settings. */
     private static final String DEFAULT_IP_PROPERTY = "default.ip";
     private static final String DEFAULT_IP = "226.0.67.1";
-    private String m_defaultIp;
+    private final String m_defaultIp;
 
     private static final String PORT_PROPERTY = "default.port";
     private static final int PORT_DEFAULT = 44500;
-    private int m_port;
+    private final int m_port;
 
 
     /** Private constructor, enforces Singleton pattern. */
@@ -189,14 +189,27 @@ public class VspProperties {
         }
     }
 
+    /**
+     * Returns the Windows VLC path configured in application.properties.
+     * @return the Windows VLC path configured in application.properties.
+     */
     public String getWindowsVlcPath() {
         return m_winVlcPath;
     }
 
+    /**
+     * Returns the Macintosh VLC path configured in application.properties.  This particular VLC installation is broken
+     * (as of 10/1/2014), but once bugs in VLC are fixed may work in the future.
+     * @return the Macintosh VLC path configured in application.properties.
+     */
     public String getMacVlcPath() {
         return m_macVlcPath;
     }
 
+    /**
+     * Returns the Linux VLC path configured in application.properties.
+     * @return the Linux VLC path configured in application.properties.
+     */
     public String getLinuxVlcPath() {
         return m_nixVlcPath;
     }
@@ -217,26 +230,50 @@ public class VspProperties {
         return m_recordingLibraryDir;
     }
 
+    /**
+     * Returns the filename that should be used for the frame recording metadata file.
+     * @return the filename that should be used for the frame recording metadata file.
+     */
     public String getFrameRecordingFilename() {
         return m_frameRecordingFileName;
     }
 
+    /**
+     * Returns the name of a directory where temporary files generated during processing may be written.
+     * @return the name of a directory where temporary files generated during processing may be written.
+     */
     public String getScratchDirectory() {
         return m_scratchDir;
     }
 
+    /**
+     * Returns the default IP address that is used to broadcast/receive multicast data on.
+     * @return the default IP address that is used to broadcast/receive multicast data on.
+     */
     public String getDefaultIpAddress() {
         return m_defaultIp;
     }
 
+    /**
+     * Returns the port used to broadcast/receive multicast data on.
+     * @return the port used to broadcast/receive multicast data on.
+     */
     public int getPort() {
         return m_port;
     }
 
+    /**
+     * Returns the FPS to rip frames at.
+     * @return the FPS to rip frames at.
+     */
     public int getRecordingFps() {
         return m_recordingFps;
     }
 
+    /**
+     * Returns the quality value for frames ripped from the video stream.
+     * @return the quality value for frames ripped from the video stream.
+     */
     public int getRecordingQuality() {
         return m_recordingQuality;
     }

@@ -1,7 +1,5 @@
 package vsp.data;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Objects;
 
 /**
@@ -11,15 +9,14 @@ import java.util.Objects;
 public class FileVideoSource extends VideoSource {
 
     /** The path to the video file. */
-    private String m_filepath;
-
+    private final String m_filepath;
 
     /**
      * Creates a new FileVideoSource.
-     *
      * @param filepath the file path to the video source file.
      */
     public FileVideoSource(String filepath) {
+        super("File Video Source:  " + filepath);
         m_filepath = filepath;
     }
 
@@ -53,7 +50,7 @@ public class FileVideoSource extends VideoSource {
 
     /**
      * Returns the path to the file.
-     
+     * @return the path to the file.
      */
     public String getFilepath() {
         return m_filepath;
