@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 public class MulticastDataMonitor implements Runnable {
 
     /** A logger. */
-    private static final Logger LOGGER = Logger.getAnonymousLogger(MulticastDataMonitor.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(MulticastDataMonitor.class.getName());
 
     /** The IP Address to listen on. */
     private final String m_ipAddress;
@@ -49,14 +49,16 @@ public class MulticastDataMonitor implements Runnable {
         InetAddress group = InetAddress.getByName(m_ipAddress);
         MulticastSocket socket = new MulticastSocket(m_port);
         socket.joinGroup(group);
-        byte[] buf = new byte[1500];
-        DatagramPacket recv = new DatagramPacket(buf, buf.length);
 
         boolean listening = true;
         while(listening) {
+            byte[] buf = new byte[1500];
+            DatagramPacket recv = new DatagramPacket(buf, buf.length);
             //Receive data, so we notice that data is coming over.  We don't actually receive the data here!
             //VLC actually grabs the data for us, this is just a "is data there" detection mechanism.
+            LOGGER.info("Preparing to receive socket data: " + m_ipAddress + ":" + m_port);
             socket.receive(recv);
+            LOGGER.info("Received socket data");
             updateTime();
         }
 
@@ -67,6 +69,7 @@ public class MulticastDataMonitor implements Runnable {
     @Override
     public void run() {
         try {
+            LOGGER.info("Running MDM");
             listenForData();
         } catch (IOException ex) {
             LOGGER.log(Level.SEVERE, "Error listening for data.", ex);
@@ -78,11 +81,13 @@ public class MulticastDataMonitor implements Runnable {
      * @return the last time a packet was updated.
      */
     public synchronized long getLastPacketReceiptTime() {
+        LOGGER.info("Fetching last packet time");
         return m_timeOfLastPacketReceipt;
     }
 
     /** Updates the last updated time. */
     private synchronized void updateTime() {
+        LOGGER.info("Data received, updating time");
         m_timeOfLastPacketReceipt = System.currentTimeMillis();
     }
 }

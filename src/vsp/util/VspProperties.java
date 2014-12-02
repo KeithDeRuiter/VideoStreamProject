@@ -182,7 +182,7 @@ public class VspProperties {
 
         String port = properties.getProperty(PORT_PROPERTY);
         if (port == null){
-            LOGGER.config("Error reading recording quality property (value was null), using default:  " + PORT_DEFAULT);
+            LOGGER.config("Error reading port property (value was null), using default:  " + PORT_DEFAULT);
             m_port = PORT_DEFAULT;
         } else {
             m_port = Integer.valueOf(port);

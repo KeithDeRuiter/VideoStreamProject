@@ -19,7 +19,7 @@ import vsp.util.VspProperties;
 public class MulticastDataDetector implements Runnable, RecordingCompleteListener, MulticastDataDetectionNotifier {
 
     /** A logger. */
-    private static final Logger LOGGER = Logger.getAnonymousLogger(MulticastDataDetector.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(MulticastDataDetector.class.getName());
 
     /** List of MulticastDataListeners to notify when data starts or stops. */
     private List<MulticastDataDetectionListener> m_multicastDataDetectionListeners;
@@ -55,38 +55,34 @@ public class MulticastDataDetector implements Runnable, RecordingCompleteListene
     /** Run the data detector. */
     @Override
     public void run() {
-        m_monitor.run();
-        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-        executor.schedule(new Runnable() {
-                @Override
-                public void run() {
-                    long now = System.currentTimeMillis();
-                    long lastPacket = m_monitor.getLastPacketReceiptTime();
-                    if ((now - lastPacket) > TIMEOUT) {
-                        if (!m_streamActive) {
-                            try {
-                                //Kick off processing
-                                String frameRecordingDirectory = VspProperties.getInstance().getRecordingLibraryDirectory();
-                                StreamRecordingManager srm = new StreamRecordingManager(new StreamVideoSource(m_ipAddress, m_port, "Source"), frameRecordingDirectory, 10L);
-                                srm.startRecording();
+        Thread t = new Thread(m_monitor);
+        t.start();
+        ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
+        executor.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                long now = System.currentTimeMillis();
+                long lastPacket = m_monitor.getLastPacketReceiptTime();
+                //If not active already, and we received something recently, start a new stream
+                if (!m_streamActive && (now - lastPacket) < TIMEOUT) {
+                    try {
+                        //Kick off processing
+                        String frameRecordingDirectory = VspProperties.getInstance().getRecordingLibraryDirectory();
+                        StreamRecordingManager srm = new StreamRecordingManager(new StreamVideoSource(m_ipAddress, m_port, "Source"), frameRecordingDirectory, 10L);
+                        srm.startRecording();
 
-                                // Notify listeners of stream start.
-                                notifyStreamStart();
-                                m_streamActive = true;
-                            } catch (UnknownHostException ex) {
-                                LOGGER.log(Level.SEVERE, "Error connecting stream recording manager.", ex);
-                            }
-
-
-                        }
-                    } else {
-                        m_streamActive = false;
-                        notifyStreamStop();
+                        // Notify listeners of stream start.
+                        notifyStreamStart();
+                        m_streamActive = true;
+                    } catch (UnknownHostException ex) {
+                        LOGGER.log(Level.SEVERE, "Error connecting stream recording manager.", ex);
                     }
                 }
-            },
-            0L,
-            TimeUnit.MILLISECONDS);
+            }
+        },
+        0L,
+        2000L,
+        TimeUnit.MILLISECONDS);
     }
 
     /** {@inherit} */
