@@ -220,7 +220,12 @@ public class StreamRecordingManager implements RecordingCompleteNotifier {
                 //Reset cursor to end of file
                 m_cursor = (int) length;
 
-                //Write scratch recording snippet for ffmpeg to pull from
+                //Write scratch recording snippet for ffmpeg to pull from, making scratch dir if it does not exist already
+                File scratchDir = new File(VspProperties.getInstance().getScratchDirectory());
+                if(!scratchDir.exists()) {
+                    scratchDir.mkdirs();
+                    Logger.getLogger(StreamRecordingManager.class.getName()).info("Could not find scratch dir, created one at: " + scratchDir.getCanonicalPath());
+                }
                 String snippetPath = VspProperties.getInstance().getScratchDirectory() + "/" + System.currentTimeMillis();
                 File scratchRecordingSnippet = new File(snippetPath);
                 try (FileOutputStream fos = new FileOutputStream(scratchRecordingSnippet)) {

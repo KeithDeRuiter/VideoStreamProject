@@ -19,6 +19,7 @@ import javax.swing.JTextField;
 import uk.co.caprica.vlcj.player.MediaPlayer;
 import uk.co.caprica.vlcj.player.MediaPlayerFactory;
 import vsp.data.VideoBroadcast;
+import vsp.util.VspProperties;
 
 /**
  * A utility display for broadcasting a video.
@@ -29,12 +30,12 @@ public class VideoBroadcastDisplay {
 
     /** LOGGER */
     private static final Logger LOGGER = Logger.getLogger(VideoBroadcastDisplay.class.getName());
-
+    
     /** The default IP address. */
-    private final String m_defaultIp = "226.0.67.1";
+    private final String m_defaultIp = VspProperties.getInstance().getDefaultIpAddress();
 
     /** The default port value. */
-    private final String m_defaultPort = "44500";
+    private final String m_defaultPort = String.valueOf(VspProperties.getInstance().getPort());
 
     /** The top level window for this display. */
     private JFrame m_frame;

@@ -168,7 +168,7 @@ public class VspProperties {
             LOGGER.config("Error reading default IP address (value was null), using default:  " + DEFAULT_IP);
             m_defaultIp = DEFAULT_IP;
         } else {
-            m_defaultIp = recordingFps;
+            m_defaultIp = defaultIp;
         }
 
         // Recording quality value
